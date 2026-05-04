@@ -13,38 +13,29 @@ public class User {
     private String name;
     private String email;
 
-    // Konstruktor bezargumentowy (wymagany przez JPA)
+    // NOWE POLE DO TESTU
+    private String phoneNumber;
+
     public User() {
     }
 
-    // Konstruktor argumentowy (ułatwi Ci tworzenie użytkowników później)
-    public User(String name, String email) {
+    public User(String name, String email, String phoneNumber) {
         this.name = name;
         this.email = email;
+        this.phoneNumber = phoneNumber;
     }
 
-    // Gettery i Settery (niezbędne, aby Hibernate mógł zapisać dane)
-    public Long getId() {
-        return id;
-    }
+    // Gettery i Settery
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    // GETTER I SETTER DLA NOWEGO POLA
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 }
