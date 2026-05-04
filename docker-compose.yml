@@ -13,8 +13,7 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-
-  # 2. Panel graficzny pgAdmin
+# Panel graficzny pgAdmin
   pgadmin:
     image: dpage/pgadmin4
     restart: always
