@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # 1. Baza danych PostgreSQL
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: proj_admin
+      POSTGRES_PASSWORD: Abiaxd11
+      POSTGRES_DB: proj_db
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # 2. Panel graficzny pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@proj.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  # 3. Aplikacja Backend (Java)
+  backend:
+    build:
+      context: ./code  # Tutaj GitHub Actions będzie wrzucać kod źródłowy z Dockerfile
+    restart: always
+    ports:
+      - "8001:8080" # Aplikacja dostępna na porcie 8001
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/proj_db
+      - SPRING_DATASOURCE_USERNAME=proj_admin
+      - SPRING_DATASOURCE_PASSWORD=Abiaxd11
+      # Poniższa linia pomaga Springowi czekać na bazę danych
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db
+
+  # 4. Monitoring logów (Dozzle) - darmowy podgląd "na żywo" w przeglądarce
+  dozzle:
+    image: amir20/dozzle:latest
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8888:8080" # Logi będą pod adresem TWOJE_IP:8888
