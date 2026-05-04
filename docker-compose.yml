@@ -29,7 +29,7 @@ services:
   # 3. Aplikacja Backend (Java)
   backend:
     build:
-      context: ./code  # Tutaj GitHub Actions będzie wrzucać kod źródłowy z Dockerfile
+      context: ./backend  # Tutaj GitHub Actions będzie wrzucać kod źródłowy z Dockerfile
     restart: always
     ports:
       - "8001:8080" # Aplikacja dostępna na porcie 8001
