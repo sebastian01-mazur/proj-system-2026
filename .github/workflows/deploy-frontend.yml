@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy index.html to Server
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.SERVER_IP }}        # Zmienione z HOST na SERVER_IP
+          username: ubuntu                      # Zmienione z ${{ secrets.USERNAME }} na ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}   # Zmienione z SSH_KEY na SSH_PRIVATE_KEY
           source: "frontend/index.html"
           target: "/home/ubuntu/proj-system"
           strip_components: 0
