@@ -48,3 +48,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8888:8080" # Logi będą pod adresem TWOJE_IP:8888
+  frontend:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
