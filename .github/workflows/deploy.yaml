@@ -1,20 +1,21 @@
-name: Deploy PROJ to Oracle Cloud
+name: Deploy Backend to Oracle
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main  # Akcja uruchomi się tylko po wrzuceniu kodu na gałąź main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ~/proj-system/code
+            cd ~/proj-system
             git pull origin main
-            # sudo docker-compose up -d --build
+            sudo docker-compose up -d --build backend
