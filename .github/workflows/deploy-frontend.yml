@@ -1,6 +1,5 @@
-name: Deploy Frontend React to Oracle
+name: Deploy Frontend Test
 
-# Uruchom tylko, gdy ktoś wrzuci zmiany do folderu "frontend" na gałęzi "main"
 on:
   push:
     branches: [ "main" ]
@@ -8,30 +7,18 @@ on:
       - 'frontend/**'
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Pobranie najnowszego kodu z GitHuba
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Instalacja środowiska Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Budowanie aplikacji React (Vite)
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
-      - name: Wysłanie gotowych plików na serwer Oracle
+      - name: Copy index.html to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           source: "frontend/index.html"
-          target: "/home/ubuntu/proj-system/frontend/"
-          strip_components: 2
+          target: "/home/ubuntu/proj-system"
+          strip_components: 0
