@@ -57,7 +57,7 @@ public class CurrencyService {
                 rate.getMid()
         );
     }
-    //sprawdzenie cache i zwraca z bazy lub pobiera z API i zapisuje w bazie
+    //sprawdzenie cache i zwrócenie z bazy lub pobiera z API i zapisuje w bazie
     public CurrencyRateResponse getHistoricalRate(
             String code,
             LocalDate date
@@ -156,7 +156,7 @@ public class CurrencyService {
         }
 
         CurrencyRateResponse response =
-                getHistoricalRate(code, date);
+                getPreviousWorkingRate(code, date);
 
         return response.getRate();
     }
@@ -164,5 +164,37 @@ public class CurrencyService {
     public List<Currency> getSupportedCurrencies() {
 
         return currencyRepository.findAll();
+    }
+    //Pobiera kurs z ostatniego dostępnego dnia roboczego
+    private CurrencyRateResponse getPreviousWorkingRate(
+            String code,
+            LocalDate date
+    ) {
+
+        LocalDate currentDate = date;
+
+        //Maksymalnie 7 prób cofania daty
+        for (int i = 0; i < 7; i++) {
+
+            try {
+
+                return getHistoricalRate(
+                        code,
+                        currentDate
+                );
+
+            } catch (RuntimeException exception) {
+
+                //Cofnięcie o dzień
+                currentDate = currentDate.minusDays(1);
+            }
+        }
+
+        throw new CurrencyNotFoundException(
+                "Nie znaleziono kursu waluty: "
+                        + code
+                        + " dla daty: "
+                        + date
+        );
     }
 }
