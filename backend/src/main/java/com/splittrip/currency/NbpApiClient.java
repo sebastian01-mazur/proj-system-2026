@@ -2,6 +2,7 @@ package com.splittrip.currency;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
 
 
 @Component
@@ -20,12 +21,20 @@ public class NbpApiClient {
                 "https://api.nbp.pl/api/exchangerates/rates/A/"
                         + code
                         + "/?format=json";
+        try {
+            return restTemplate.getForObject(
+                    url,
+                    NbpRateResponse.class
+            );
+        } catch (HttpClientErrorException exception) {
+            throw new CurrencyNotFoundException(
+                    "Nie znaleziono waluty: " + code
+            );
+        }
 
-        return restTemplate.getForObject(
-                url,
-                NbpRateResponse.class
-        );
+
     }
+
     public NbpRateResponse getRateByDate(
             String code,
             String date
@@ -37,10 +46,15 @@ public class NbpApiClient {
                         + "/"
                         + date
                         + "/?format=json";
-
-        return restTemplate.getForObject(
-                url,
-                NbpRateResponse.class
-        );
+        try {
+            return restTemplate.getForObject(
+                    url,
+                    NbpRateResponse.class
+            );
+        } catch (HttpClientErrorException excpetion) {
+            throw new CurrencyNotFoundException(
+                    "Nie znaleziono kursu dla waluty: " + code + " na dzień " + date
+            );
+        }
     }
 }
