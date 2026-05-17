@@ -26,4 +26,21 @@ public class NbpApiClient {
                 NbpRateResponse.class
         );
     }
+    public NbpRateResponse getRateByDate(
+            String code,
+            String date
+    ) {
+
+        String url =
+                "https://api.nbp.pl/api/exchangerates/rates/A/"
+                        + code
+                        + "/"
+                        + date
+                        + "/?format=json";
+
+        return restTemplate.getForObject(
+                url,
+                NbpRateResponse.class
+        );
+    }
 }

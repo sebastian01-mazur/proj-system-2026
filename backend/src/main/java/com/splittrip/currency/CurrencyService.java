@@ -51,4 +51,50 @@ public class CurrencyService {
                 rate.getMid()
         );
     }
+    //sprawdzenie cache i zwraca z bazy lub pobiera z API i zapisuje w bazie
+    public CurrencyRateResponse getHistoricalRate(
+            String code,
+            LocalDate date
+    ) {
+
+        Optional<CurrencyRate> existingRate =
+                currencyRateRepository
+                        .findByCurrencyCodeAndRateDate(code, date);
+
+        if (existingRate.isPresent()) {
+
+            CurrencyRate cachedRate = existingRate.get();
+
+            return new CurrencyRateResponse(
+                    cachedRate.getCurrencyName(),
+                    cachedRate.getCurrencyCode(),
+                    cachedRate.getRate()
+            );
+        }
+
+        NbpRateResponse response =
+                nbpApiClient.getRateByDate(
+                        code,
+                        date.toString()
+                );
+
+        NbpRate rate =
+                response.getRates().get(0);
+
+        CurrencyRate currencyRate =
+                new CurrencyRate(
+                        response.getCode(),
+                        response.getCurrency(),
+                        rate.getMid(),
+                        date
+                );
+
+        currencyRateRepository.save(currencyRate);
+
+        return new CurrencyRateResponse(
+                response.getCurrency(),
+                response.getCode(),
+                rate.getMid()
+        );
+    }
 }
