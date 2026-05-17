@@ -2,7 +2,6 @@ package com.splittrip.trip;
 
 import jakarta.persistence.*;
 
-import javax.management.relation.Role;
 import java.time.LocalDate;
 
 @Entity
@@ -16,7 +15,7 @@ public class TripMember {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "rola")
-    private Role role;
+    private Roles role;
 
     @Column(name = "data_dolaczenia")
     private LocalDate joinedAt;
@@ -24,7 +23,7 @@ public class TripMember {
     public TripMember() {
     }
 
-    public TripMember(TripMemberId id, Role role, LocalDate joinedAt) {
+    public TripMember(TripMemberId id, Roles role, LocalDate joinedAt) {
         this.id = id;
         this.role = role;
         this.joinedAt = joinedAt;
@@ -38,11 +37,11 @@ public class TripMember {
         this.id = id;
     }
 
-    public Role getRole() {
+    public Roles getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(Roles role) {
         this.role = role;
     }
 

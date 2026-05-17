@@ -20,7 +20,7 @@ public class Invitation {
     private UUID id;
 
     @JdbcTypeCode(Types.VARCHAR)
-    @Column(name = "id_podrozy", length = 36)
+    @Column(name = "podroze_id_podrozy", length = 36)
     private UUID tripId;
 
     @JdbcTypeCode(Types.VARCHAR)
