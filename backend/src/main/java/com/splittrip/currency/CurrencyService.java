@@ -3,6 +3,9 @@ package com.splittrip.currency;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 public class CurrencyService {
@@ -11,13 +14,16 @@ public class CurrencyService {
 
     private final NbpApiClient nbpApiClient;
     private final CurrencyRateRepository currencyRateRepository;
+    private final CurrencyRepository currencyRepository;
 
     public CurrencyService(
             NbpApiClient nbpApiClient,
-            CurrencyRateRepository currencyRateRepository)
+            CurrencyRateRepository currencyRateRepository,
+            CurrencyRepository currencyRepository)
             {
                 this.nbpApiClient = nbpApiClient;
                 this.currencyRateRepository = currencyRateRepository;
+                this.currencyRepository = currencyRepository;
             }
 
     public CurrencyRateResponse getLatestRate(String code) {
@@ -96,5 +102,67 @@ public class CurrencyService {
                 response.getCode(),
                 rate.getMid()
         );
+    }
+    // Przelicza kwotę między walutami według kursu historycznego
+    public CurrencyConversionResponse convertCurrency(
+            String from,
+            String to,
+            BigDecimal amount,
+            LocalDate date
+    ) {
+
+        if (from.equalsIgnoreCase(to)) {
+
+            return new CurrencyConversionResponse(
+                    from,
+                    to,
+                    amount,
+                    amount,
+                    BigDecimal.ONE
+            );
+        }
+
+        BigDecimal fromRate = getRateToPln(from, date);
+
+        BigDecimal toRate = getRateToPln(to, date);
+
+        BigDecimal conversionRate =
+                fromRate.divide(
+                        toRate,
+                        4,
+                        RoundingMode.HALF_UP
+                );
+
+        BigDecimal convertedAmount =
+                amount.multiply(conversionRate)
+                        .setScale(2, RoundingMode.HALF_UP);
+
+        return new CurrencyConversionResponse(
+                from,
+                to,
+                amount,
+                convertedAmount,
+                conversionRate
+        );
+    }
+    //Zwraca kurs waluty względem PLN
+    private BigDecimal getRateToPln(
+            String code,
+            LocalDate date
+    ) {
+
+        if (code.equalsIgnoreCase("PLN")) {
+            return BigDecimal.ONE;
+        }
+
+        CurrencyRateResponse response =
+                getHistoricalRate(code, date);
+
+        return response.getRate();
+    }
+    //lista obsługiwanych walut
+    public List<Currency> getSupportedCurrencies() {
+
+        return currencyRepository.findAll();
     }
 }
