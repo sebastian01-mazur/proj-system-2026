@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class CurrencyService {
@@ -38,7 +39,8 @@ public class CurrencyService {
                 return new CurrencyRateResponse(
                         cachedRate.getCurrencyName(),
                         cachedRate.getCurrencyCode(),
-                        cachedRate.getRate()
+                        cachedRate.getRate(),
+                        cachedRate.getRateDate()
                 );
             }
 
@@ -54,11 +56,12 @@ public class CurrencyService {
         return new CurrencyRateResponse(
                 response.getCurrency(),
                 response.getCode(),
-                rate.getMid()
+                rate.getMid(),
+                LocalDate.now()
         );
     }
     //sprawdzenie cache i zwrócenie z bazy lub pobiera z API i zapisuje w bazie
-    public CurrencyRateResponse getHistoricalRate(
+    public CurrencyRateResponse getHistoricalRateInternal(
             String code,
             LocalDate date
     ) {
@@ -74,7 +77,8 @@ public class CurrencyService {
             return new CurrencyRateResponse(
                     cachedRate.getCurrencyName(),
                     cachedRate.getCurrencyCode(),
-                    cachedRate.getRate()
+                    cachedRate.getRate(),
+                    cachedRate.getRateDate()
             );
         }
 
@@ -100,7 +104,19 @@ public class CurrencyService {
         return new CurrencyRateResponse(
                 response.getCurrency(),
                 response.getCode(),
-                rate.getMid()
+                rate.getMid(),
+                date
+        );
+    }
+    //kurs historyczny z ostatniego dnia roboczego
+    public CurrencyRateResponse getHistoricalRate(
+            String code,
+            LocalDate date
+    ) {
+
+        return getPreviousWorkingRate(
+                code,
+                date
         );
     }
     // Przelicza kwotę między walutami według kursu historycznego
@@ -178,7 +194,7 @@ public class CurrencyService {
 
             try {
 
-                return getHistoricalRate(
+                return getHistoricalRateInternal(
                         code,
                         currentDate
                 );
@@ -196,5 +212,37 @@ public class CurrencyService {
                         + " dla daty: "
                         + date
         );
+    }
+    //historia kursów dla zakresu dat
+    public List<CurrencyRateResponse> getHistoricalRatesBetweenDates(
+            String code,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+
+        List<CurrencyRateResponse> rates =
+                new ArrayList<>();
+
+        LocalDate currentDate = startDate;
+
+        while (!currentDate.isAfter(endDate)) {
+
+                CurrencyRateResponse rate =
+                        getPreviousWorkingRate(
+                                code,
+                                currentDate
+                        );
+
+                boolean alreadyExists =
+                        rates.stream().anyMatch(existing -> existing.getDate().equals(rate.getDate()));
+               //dodawanie unikalnych dat
+            if (!alreadyExists) {
+                rates.add(rate);
+            }
+
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return rates;
     }
 }

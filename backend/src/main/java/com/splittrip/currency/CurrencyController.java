@@ -60,4 +60,19 @@ public class CurrencyController {
 
         return currencyService.getSupportedCurrencies();
     }
+
+    //historia kursów dla zakresu dat
+    @GetMapping("/history/{code}/range")
+    public List<CurrencyRateResponse> getHistoricalRatesBetweenDates(
+            @PathVariable String code,
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate
+    ) {
+
+        return currencyService.getHistoricalRatesBetweenDates(
+                code,
+                startDate,
+                endDate
+        );
+    }
 }
