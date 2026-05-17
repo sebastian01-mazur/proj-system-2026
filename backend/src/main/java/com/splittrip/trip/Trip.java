@@ -24,7 +24,7 @@ public class Trip {
 
 
     @JdbcTypeCode(Types.VARCHAR)
-    @Column(name = "id_organizatora")
+    @Column(name = "id_wlasciciela", length = 36)
     private UUID organizerId;
 
     @Column(name = "kraj")
@@ -36,7 +36,7 @@ public class Trip {
     @Column(name = "data_zakonczenia")
     private LocalDate endDate;
 
-    @Column(name = "waluta_bazowa", length = 3)
+    @Column(name = "waluty_kod_waluty", length = 3)
     private String baseCurrency;
 
     @Column(name = "budzet_planowany", precision = 12, scale = 2)
