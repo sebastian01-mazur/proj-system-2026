@@ -1,0 +1,46 @@
+@organizerId = 66666666-6666-6666-6666-666666666666
+@tripId = ed315e6b-c985-4617-a788-ec4c49eda602
+
+---
+
+### TEST 1: Utworzenie nowej wycieczki
+
+POST http://localhost:8080/api/trips
+Content-Type: application/json
+
+{
+  "organizerId": "{{organizerId}}",
+  "country": "Hiszpania",
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-14",
+  "baseCurrency": "EUR",
+  "plannedBudget": 2500.00
+}
+
+###
+
+### TEST 2: Pobranie szczegółów wycieczki po ID
+GET http://localhost:8080/api/trips/{{tripId}}
+Accept: application/json
+
+###
+
+### TEST 3: Pobranie wszystkich wycieczek danego organizatora
+GET http://localhost:8080/api/trips/organizer/{{organizerId}}
+Accept: application/json
+
+###
+
+### TEST 4: Pobranie uczestników wycieczki
+GET http://localhost:8080/api/trips/{{tripId}}/members
+Accept: application/json
+
+###
+
+### TEST 5: Zmiana statusu wycieczki
+PATCH http://localhost:8080/api/trips/{{tripId}}/status
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
