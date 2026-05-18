@@ -1,12 +1,14 @@
 package com.splittrip.dashboard;
 
-import com.splittrip.trip.Invitation;
 import com.splittrip.trip.Trip;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record DashboardSummaryResponse(
-        List<Trip> activeTrips,
-        List<Invitation> pendingInvitations
+        List<Trip> userTrips,
+        BigDecimal totalPlannedBudget,
+        List<Object> recentExpenses,
+        Object budgetStats
 ) {}
 

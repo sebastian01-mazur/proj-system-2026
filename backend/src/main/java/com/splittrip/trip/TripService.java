@@ -48,4 +48,9 @@ public class TripService {
         return tripRepository.save(trip);
     }
 
+    public List<Trip> getUserTrips(UUID userId) {
+        List<UUID> tripIds = memberService.getUserTripIds(userId);
+        return tripRepository.findAllById(tripIds);
+    }
+
 }

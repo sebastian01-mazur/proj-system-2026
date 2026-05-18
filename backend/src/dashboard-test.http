@@ -1,0 +1,7 @@
+@userId = 66666666-6666-6666-6666-666666666666
+
+---
+
+### TEST 1: Pobranie danych do Dashboardu dla użytkownika
+GET http://localhost:8080/api/dashboard/{{userId}}
+Accept: application/json

@@ -3,7 +3,6 @@ package com.splittrip.trip;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import javax.management.relation.Role;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -84,6 +83,12 @@ public class MemberService {
             invitation.setRespondedAt(LocalDate.now());
         }
         invitationRepository.save(invitation);
+    }
+
+    public List<UUID> getUserTripIds(UUID userId) {
+        return tripMemberRepository.findByIdUserId(userId).stream()
+                .map(member -> member.getId().getTripId())
+                .toList();
     }
 
 }
