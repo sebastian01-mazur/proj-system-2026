@@ -1,0 +1,19 @@
+@tripId = ed315e6b-c985-4617-a788-ec4c49eda602
+
+---
+
+### TEST 1: Raport wydatków
+GET http://localhost:8081/api/trips/{{tripId}}/reports/expenses
+Accept: application/json
+
+###
+
+### TEST 2: Raport uczestników
+GET http://localhost:8081/api/trips/{{tripId}}/reports/participants
+Accept: application/json
+
+###
+
+### TEST 3: Bilans rozliczeń
+GET http://localhost:8081/api/trips/{{tripId}}/settlements
+Accept: application/json
