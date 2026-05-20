@@ -1,0 +1,62 @@
+@currencyCode = USD
+@invalidCurrency = ABC
+
+---
+
+### TEST 1: Pobranie listy obsługiwanych walut
+GET http://localhost:8001/api/currencies
+Accept: application/json
+
+###
+
+### TEST 2: Pobranie aktualnego kursu waluty
+GET http://localhost:8001/api/currencies/latest/{{currencyCode}}
+Accept: application/json
+
+###
+
+### TEST 3: Pobranie historycznego kursu waluty
+GET http://localhost:8001/api/currencies/history/{{currencyCode}}?date=2025-05-08
+Accept: application/json
+
+###
+
+### TEST 4: Pobranie kursu z dnia niepracującego (poprzedni dzień roboczy)
+GET http://localhost:8001/api/currencies/history/{{currencyCode}}?date=2025-05-10
+Accept: application/json
+
+###
+
+### TEST 5: Pobranie historii kursów dla zakresu dat
+GET http://localhost:8001/api/currencies/history/{{currencyCode}}/range?startDate=2025-05-01&endDate=2025-05-05
+Accept: application/json
+
+###
+
+### TEST 6: Przeliczenie waluty EUR -> PLN
+GET http://localhost:8001/api/currencies/convert?from=EUR&to=PLN&amount=100&date=2025-05-10
+Accept: application/json
+
+###
+
+### TEST 7: Przeliczenie PLN -> PLN
+GET http://localhost:8001/api/currencies/convert?from=PLN&to=PLN&amount=150&date=2025-05-10
+Accept: application/json
+
+###
+
+### TEST 8: Nieistniejąca waluta - latest
+GET http://localhost:8001/api/currencies/latest/{{invalidCurrency}}
+Accept: application/json
+
+###
+
+### TEST 9: Nieistniejąca waluta - history
+GET http://localhost:8001/api/currencies/history/{{invalidCurrency}}?date=2025-05-10
+Accept: application/json
+
+###
+
+### TEST 10: Nieistniejąca waluta - zakres dat
+GET http://localhost:8001/api/currencies/history/{{invalidCurrency}}/range?startDate=2025-05-01&endDate=2025-05-05
+Accept: application/json
