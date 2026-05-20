@@ -60,8 +60,8 @@ export default function Login() {
                         required
                     />
 
-                    <Link to="/login" className="small-link">
-                        Nie pamiętam hasła.
+                    <Link to="/forgot-password" className="small-link">
+                        Nie pamiętam hasła
                     </Link>
 
                     <button className="auth-submit" type="submit">
