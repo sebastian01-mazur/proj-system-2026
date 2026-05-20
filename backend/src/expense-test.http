@@ -1,0 +1,89 @@
+
+### 0. Dodanie wydatku
+
+POST http://localhost:8001/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "55555555-5555-5555-5555-555555555555",
+  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "amount": 120.50,
+  "currency": "USD",
+  "description": "Paliwo",
+  "expenseDate": "2025-05-15"
+}
+
+###
+
+### 1. Lista wydatków podróży
+
+GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
+
+###
+
+### 2. Ostatnie wydatki użytkownika
+
+GET http://localhost:8001/api/expenses/recent/55555555-5555-5555-5555-555555555555
+
+###
+
+### 3. Statystyki budżetowe użytkownika
+
+GET http://localhost:8001/api/expenses/statistics/55555555-5555-5555-5555-555555555555
+
+###
+
+### 4. Czy zapis trafia do bazy danych
+GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
+
+###
+
+### 5. Nieistniejący trip
+
+POST http://localhost:8001/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "00000000-0000-0000-0000-000000000000",
+  "payerId": "55555555-5555-5555-5555-555555555555",
+  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "amount": 120.50,
+  "currency": "USD",
+  "description": "TEST",
+  "expenseDate": "2025-05-15"
+}
+
+###
+
+### 6. Nieistniejąca kategoria
+
+POST http://localhost:8001/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "55555555-5555-5555-5555-555555555555",
+  "categoryId": "00000000-0000-0000-0000-000000000000",
+  "amount": 120.50,
+  "currency": "USD",
+  "description": "TEST",
+  "expenseDate": "2025-05-15"
+}
+
+###
+
+### 7. Nieistniejąca waluta
+
+POST http://localhost:8001/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "55555555-5555-5555-5555-555555555555",
+  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "amount": 120.50,
+  "currency": "ABC",
+  "description": "TEST",
+  "expenseDate": "2025-05-15"
+}

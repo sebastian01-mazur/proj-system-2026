@@ -1,5 +1,6 @@
 package com.splittrip.expense;
 
+import com.splittrip.expense.ExpenseCategoryRepository;
 import com.splittrip.currency.CurrencyConversionResponse;
 import com.splittrip.currency.CurrencyService;
 import com.splittrip.expense.dto.BudgetStatisticsDto;
@@ -26,25 +27,30 @@ public class ExpenseService {
     private final CurrencyService currencyService;
     private final TripRepository tripRepository;
     private final TripMemberRepository tripMemberRepository;
-
+    private final ExpenseCategoryRepository expenseCategoryRepository;
     public ExpenseService(
         ExpenseRepository expenseRepository,
         TripRepository tripRepository,
         TripMemberRepository tripMemberRepository,
-        CurrencyService currencyService
+        CurrencyService currencyService,
+        ExpenseCategoryRepository expenseCategoryRepository
 ) {
         this.expenseRepository = expenseRepository;
         this.currencyService = currencyService;
         this.tripRepository = tripRepository;
         this.tripMemberRepository = tripMemberRepository;
+        this.expenseCategoryRepository = expenseCategoryRepository;
     }
 
     //Tworzenie nowego wydatku
     public Expense createExpense(CreateExpenseRequest request) {
 
         Trip trip =
-                tripRepository.findById(request.tripId())
-                        .orElseThrow(() -> new RuntimeException("Nie znaleziono wycieczki o indexie: " + request.tripId()));
+        tripRepository.findById(request.tripId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Nie znaleziono wycieczki o indexie: "
+                                + request.tripId()
+                ));
 
         CurrencyConversionResponse conversion =
                 currencyService.convertCurrency(
@@ -63,7 +69,8 @@ public class ExpenseService {
         expense.setAmountInBaseCurrency(
                 conversion.getConvertedAmount()
         );
-        expense.setCategory(request.category());
+        ExpenseCategoryEntity category = expenseCategoryRepository.findById(request.categoryId()).orElseThrow(() -> new RuntimeException("Nie znaleziono kategorii wydatku o indeksie: " + request.categoryId()));
+        expense.setCategory(category);
         expense.setDescription(request.description());
         expense.setExpenseDate(request.expenseDate());
         expense.setCreatedAt(LocalDateTime.now());
@@ -103,7 +110,7 @@ public class ExpenseService {
                                 expense.getAmount(),
                                 expense.getCurrency(),
                                 expense.getExpenseDate(),
-                                expense.getCategory().name()
+                                expense.getCategory().getName()
                         ))
                 .toList();
     }

@@ -1,7 +1,5 @@
 package com.splittrip.expense.dto;
 
-import com.splittrip.expense.ExpenseCategory;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -11,7 +9,7 @@ public record CreateExpenseRequest(
     UUID payerId,
     BigDecimal amount,
     String currency,
-    ExpenseCategory category,
+    UUID categoryId,
     String description,
     LocalDate expenseDate
 ) {

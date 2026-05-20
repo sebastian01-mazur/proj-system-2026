@@ -22,25 +22,25 @@ public class Expense {
     private UUID id;
 
     @JdbcTypeCode(Types.VARCHAR)
-    @Column(name = "id_podrozy")
+    @Column(name = "podroze_id_podrozy")
     private UUID tripId;
 
     @JdbcTypeCode(Types.VARCHAR)
-    @Column(name = "id_platnika")
+    @Column(name = "id_placacego")
     private UUID payerId;
 
-    @Column(name = "kwota", precision = 12, scale = 2)
+    @Column(name = "kwota_oryginalna", precision = 12, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "kod_waluty", length = 3)
     private String currency;
 
-    @Column(name = "kwota_bazowa", precision = 12, scale = 2)
+    @Column(name = "kwota_przeliczona", precision = 12, scale = 2)
     private BigDecimal amountInBaseCurrency;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "kategoria")
-    private ExpenseCategory category;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_kategorii")
+    private ExpenseCategoryEntity category;
 
     @Column(name = "opis")
     private String description;
@@ -48,7 +48,7 @@ public class Expense {
     @Column(name = "data_wydatku")
     private LocalDate expenseDate;
 
-    @Column(name = "data_utworzenia")
+    @Column(name = "data_dodania")
     private LocalDateTime createdAt;
 
     public Expense() {
@@ -102,11 +102,11 @@ public class Expense {
         this.amountInBaseCurrency = amountInBaseCurrency;
     }
 
-    public ExpenseCategory getCategory() {
+    public ExpenseCategoryEntity getCategory() {
         return category;
     }
 
-    public void setCategory(ExpenseCategory category) {
+    public void setCategory( ExpenseCategoryEntity category) {
         this.category = category;
     }
 
