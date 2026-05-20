@@ -6,8 +6,8 @@ import com.splittrip.expense.dto.BudgetStatisticsDto;
 import com.splittrip.expense.dto.CreateExpenseRequest;
 import com.splittrip.expense.dto.RecentExpenseDto;
 import com.splittrip.trip.Trip;
-import com.splittrip.trip.TripService;
-import org.springframework.stereotype.Service;
+import com.splittrip.trip.TripMemberRepository;
+import com.splittrip.trip.TripRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,30 +15,36 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.stereotype.Service;
+
 @Service
 public class ExpenseService {
 
     //Realizuje walidację autorstwa wydatków, przypisanie płatnika, wyliczanie kwoty bazowej oraz zapisywanie proporcji podziału między uczestników
 
     private final ExpenseRepository expenseRepository;
-    private final TripService tripService;
     private final CurrencyService currencyService;
+    private final TripRepository tripRepository;
+    private final TripMemberRepository tripMemberRepository;
 
     public ExpenseService(
-            ExpenseRepository expenseRepository,
-            TripService tripService,
-            CurrencyService currencyService
-    ) {
+        ExpenseRepository expenseRepository,
+        TripRepository tripRepository,
+        TripMemberRepository tripMemberRepository,
+        CurrencyService currencyService
+) {
         this.expenseRepository = expenseRepository;
-        this.tripService = tripService;
         this.currencyService = currencyService;
+        this.tripRepository = tripRepository;
+        this.tripMemberRepository = tripMemberRepository;
     }
 
     //Tworzenie nowego wydatku
     public Expense createExpense(CreateExpenseRequest request) {
 
         Trip trip =
-                tripService.getTripById(request.tripId());
+                tripRepository.findById(request.tripId())
+                        .orElseThrow(() -> new RuntimeException("Nie znaleziono wycieczki o indexie: " + request.tripId()));
 
         CurrencyConversionResponse conversion =
                 currencyService.convertCurrency(
@@ -78,9 +84,9 @@ public class ExpenseService {
     ) {
 
         List<UUID> userTripIds =
-                tripService.getUserTrips(userId)
+                tripMemberRepository.findByIdUserId(userId)
                         .stream()
-                        .map(Trip::getId)
+                        .map(member -> member.getId().getTripId())
                         .toList();
 
         return expenseRepository.findAll()
@@ -107,18 +113,19 @@ public class ExpenseService {
             UUID userId
     ) {
 
+        List<UUID> tripIds =
+                tripMemberRepository.findByIdUserId(userId)
+                        .stream()
+                        .map(member -> member.getId().getTripId())
+                        .toList();
+
         List<Trip> trips =
-                tripService.getUserTrips(userId);
+        tripRepository.findAllById(tripIds);
 
         BigDecimal totalBudget =
                 trips.stream()
                         .map(Trip::getPlannedBudget)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        List<UUID> tripIds =
-                trips.stream()
-                        .map(Trip::getId)
-                        .toList();
 
         BigDecimal totalSpent =
                 expenseRepository.findAll()
