@@ -111,3 +111,6 @@ DELETE http://localhost:8001/api/expenses/9aba5ccc-2771-47e5-981a-8928269c3bf3
 ###
 
 GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
+
+### 10. test rozliczenia podróży
+GET http://localhost:8001/api/expenses/settlements/b0d80956-5047-4150-b1b4-dddb978d6784

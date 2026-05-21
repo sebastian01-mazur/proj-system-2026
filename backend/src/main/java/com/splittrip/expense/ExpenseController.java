@@ -1,13 +1,8 @@
 package com.splittrip.expense;
 
-import com.splittrip.expense.dto.BudgetStatisticsDto;
-import com.splittrip.expense.dto.CreateExpenseRequest;
-import com.splittrip.expense.dto.RecentExpenseDto;
+import com.splittrip.expense.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.splittrip.expense.dto.UpdateExpenseRequest;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,9 +14,11 @@ public class ExpenseController {
     //Obsługuje operacje CRUD na wydatkach: dodawanie nowych kosztów, ich edycję, usuwanie oraz wyświetlanie listy
 
     private final ExpenseService expenseService;
+    private final ExpenseSettlementService expenseSettlementService;
 
-    public ExpenseController(ExpenseService expenseService) {
+    public ExpenseController(ExpenseService expenseService, ExpenseSettlementService expenseSettlementService) {
         this.expenseService = expenseService;
+        this.expenseSettlementService = expenseSettlementService;
     }
 
     //Dodawanie wydatku
@@ -90,5 +87,12 @@ public class ExpenseController {
         @PathVariable UUID expenseId
         ) {
                 expenseService.deleteExpense(expenseId);
+        }
+
+        @GetMapping("/settlements/{tripId}")
+        public List<SettlementDto> getTripSettlements(
+                @PathVariable UUID tripId
+        ) {
+                return expenseSettlementService.calculateTripSettlements(tripId);
         }
 }
