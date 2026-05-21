@@ -12,8 +12,10 @@ import com.splittrip.trip.TripRepository;
 import com.splittrip.expense.validation.ExpenseValidator;
 import com.splittrip.expense.dto.UpdateExpenseRequest;
 import com.splittrip.expense.ExpenseSplitRepository;
+import com.splittrip.expense.dto.ExpenseParticipantDto;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -86,7 +88,15 @@ public class ExpenseService {
         expense.setExpenseDate(request.expenseDate());
         expense.setCreatedAt(LocalDateTime.now());
 
-        return expenseRepository.save(expense);
+        Expense savedExpense =
+        expenseRepository.save(expense);
+
+        createExpenseSplits(
+                savedExpense,
+                request.participants()
+        );
+
+        return savedExpense;
     }
 
     public Expense updateExpense(
@@ -115,7 +125,8 @@ public class ExpenseService {
                 request.currency(),
                 request.categoryId(),
                 request.description(),
-                request.expenseDate()
+                request.expenseDate(),
+                List.of()
         );
 
     expenseValidator.validateCreateExpense(
@@ -265,4 +276,42 @@ return expenses;
                 utilization
         );
     }
+    private void createExpenseSplits(
+        Expense expense,
+        List<ExpenseParticipantDto> participants
+) {
+
+    for (ExpenseParticipantDto participant : participants) {
+
+        ExpenseSplit split =
+                new ExpenseSplit();
+
+        split.setExpenseId(
+                expense.getId()
+        );
+
+        split.setUserId(
+                participant.userId()
+        );
+
+        split.setShareAmount(
+                participant.shareAmount()
+        );
+
+        BigDecimal percentage =
+                participant.shareAmount()
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(
+                                expense.getConvertedAmount(),
+                                2,
+                                RoundingMode.HALF_UP
+                        );
+
+        split.setPercentageShare(
+                percentage
+        );
+
+        expenseSplitRepository.save(split);
+    }
+}
 }

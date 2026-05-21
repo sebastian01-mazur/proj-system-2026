@@ -11,7 +11,7 @@ Content-Type: application/json
   "amount": 120.50,
   "currency": "USD",
   "description": "Paliwo",
-  "expenseDate": "2025-05-15"
+  "expenseDate": "2026-07-15"
 }
 
 ###
@@ -62,13 +62,13 @@ POST http://localhost:8001/api/expenses
 Content-Type: application/json
 
 {
-  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "tripId": "bbbbbbb7-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
   "payerId": "55555555-5555-5555-5555-555555555555",
   "categoryId": "00000000-0000-0000-0000-000000000000",
   "amount": 120.50,
   "currency": "USD",
   "description": "TEST",
-  "expenseDate": "2025-05-15"
+  "expenseDate": "2026-07-11"
 }
 
 ###
@@ -85,7 +85,7 @@ Content-Type: application/json
   "amount": 120.50,
   "currency": "ABC",
   "description": "TEST",
-  "expenseDate": "2025-05-15"
+  "expenseDate": "2026-07-11"
 }
 
 ###
@@ -113,4 +113,29 @@ DELETE http://localhost:8001/api/expenses/9aba5ccc-2771-47e5-981a-8928269c3bf3
 GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
 
 ### 10. test rozliczenia podróży
-GET http://localhost:8001/api/expenses/settlements/b0d80956-5047-4150-b1b4-dddb978d6784
+GET http://localhost:8001/api/expenses/settlements/bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+### 11. test automatycznego tworzenia rozliczeń
+
+POST http://localhost:8001/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "payerId": "22222222-2222-2222-2222-222222222222",
+  "amount": 300,
+  "currency": "USD",
+  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Automatyczny split test",
+  "expenseDate": "2026-05-20",
+
+  "participants": [
+    {
+      "userId": "22222222-2222-2222-2222-222222222222",
+      "shareAmount": 150
+    },
+    {
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "shareAmount": 150
+    }
+  ]
+}
