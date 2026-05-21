@@ -24,7 +24,7 @@ GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
 
 ### 2. Ostatnie wydatki użytkownika
 
-GET http://localhost:8001/api/expenses/recent/55555555-5555-5555-5555-555555555555
+GET http://localhost:8001/api/expenses/recent/11111111-1111-1111-1111-111111111111
 
 ###
 
@@ -107,3 +107,7 @@ Content-Type: application/json
 
 ### 9. delete wydatku
 DELETE http://localhost:8001/api/expenses/9aba5ccc-2771-47e5-981a-8928269c3bf3
+
+###
+
+GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784

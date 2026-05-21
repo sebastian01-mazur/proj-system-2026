@@ -11,6 +11,7 @@ import com.splittrip.trip.TripMemberRepository;
 import com.splittrip.trip.TripRepository;
 import com.splittrip.expense.validation.ExpenseValidator;
 import com.splittrip.expense.dto.UpdateExpenseRequest;
+import com.splittrip.expense.ExpenseSplitRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,13 +32,15 @@ public class ExpenseService {
     private final TripMemberRepository tripMemberRepository;
     private final ExpenseCategoryRepository expenseCategoryRepository;
     private final ExpenseValidator expenseValidator;
+    private final ExpenseSplitRepository expenseSplitRepository;
     public ExpenseService(
         ExpenseRepository expenseRepository,
         TripRepository tripRepository,
         TripMemberRepository tripMemberRepository,
         CurrencyService currencyService,
         ExpenseCategoryRepository expenseCategoryRepository,
-        ExpenseValidator expenseValidator
+        ExpenseValidator expenseValidator,
+        ExpenseSplitRepository expenseSplitRepository
 ) {
         this.expenseRepository = expenseRepository;
         this.currencyService = currencyService;
@@ -45,6 +48,7 @@ public class ExpenseService {
         this.tripMemberRepository = tripMemberRepository;
         this.expenseCategoryRepository = expenseCategoryRepository;
         this.expenseValidator = expenseValidator;
+        this.expenseSplitRepository = expenseSplitRepository;
     }
 
     //Tworzenie nowego wydatku
@@ -161,7 +165,13 @@ public class ExpenseService {
     //Lista wydatków podróży
     public List<Expense> getTripExpenses(UUID tripId) {
 
-        return expenseRepository.findByTripId(tripId);
+        List<Expense> expenses =
+        expenseRepository.findByTripId(tripId);
+        for (Expense expense : expenses) {
+            expense.setShares(expenseSplitRepository.findByExpenseId(expense.getId()));
+}
+
+return expenses;
     }
 
     //Ostatnie wydatki użytkownika dla dashboardu
@@ -177,22 +187,35 @@ public class ExpenseService {
                         .toList();
 
         return expenseRepository.findAll()
-                .stream()
-                .filter(expense ->
-                        userTripIds.contains(expense.getTripId()))
-                .sorted(Comparator.comparing(
-                        Expense::getCreatedAt).reversed())
-                .limit(limit)
-                .map(expense ->
-                        new RecentExpenseDto(
-                                expense.getId(),
-                                expense.getTripId(),
-                                expense.getAmount(),
-                                expense.getCurrency(),
-                                expense.getExpenseDate(),
-                                expense.getCategory().getName()
-                        ))
-                .toList();
+        .stream()
+
+        .peek(expense ->
+                expense.setShares(
+                        expenseSplitRepository.findByExpenseId(
+                                expense.getId()
+                        )
+                )
+        )
+
+        .filter(expense ->
+                userTripIds.contains(expense.getTripId()))
+
+        .sorted(Comparator.comparing(
+                Expense::getCreatedAt).reversed())
+
+        .limit(limit)
+
+        .map(expense ->
+                new RecentExpenseDto(
+                        expense.getId(),
+                        expense.getTripId(),
+                        expense.getAmount(),
+                        expense.getCurrency(),
+                        expense.getExpenseDate(),
+                        expense.getCategory().getName()
+                ))
+
+        .toList();
     }
 
     //Statystyki budżetowe użytkownika
