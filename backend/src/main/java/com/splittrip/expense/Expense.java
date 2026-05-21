@@ -8,6 +8,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 @Entity
 @Table(name = "wydatki")
@@ -50,6 +51,9 @@ public class Expense {
 
     @Column(name = "data_dodania")
     private LocalDateTime createdAt;
+
+    @Transient
+    private List<ExpenseSplit> shares;
 
     public Expense() {
     }
@@ -132,5 +136,17 @@ public class Expense {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public BigDecimal getConvertedAmount() {
+    return amountInBaseCurrency;
+    }
+
+    public List<ExpenseSplit> getShares() {
+        return shares;
+    }
+
+    public void setShares(List<ExpenseSplit> shares) {
+        this.shares = shares;
     }
 }

@@ -87,3 +87,23 @@ Content-Type: application/json
   "description": "TEST",
   "expenseDate": "2025-05-15"
 }
+
+###
+
+### 8. update wydatku
+PUT http://localhost:8001/api/expenses/ccccccc2-cccc-cccc-cccc-cccccccccccc
+Content-Type: application/json
+
+{
+  "payerId": "22222222-2222-2222-2222-222222222222",
+  "categoryId": "aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "amount": 999.99,
+  "currency": "EUR",
+  "description": "Zaktualizowany wydatek",
+  "expenseDate": "2026-07-11"
+}
+
+###
+
+### 9. delete wydatku
+DELETE http://localhost:8001/api/expenses/9aba5ccc-2771-47e5-981a-8928269c3bf3

@@ -5,6 +5,9 @@ import com.splittrip.expense.dto.CreateExpenseRequest;
 import com.splittrip.expense.dto.RecentExpenseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.splittrip.expense.dto.UpdateExpenseRequest;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
 import java.util.UUID;
@@ -71,4 +74,21 @@ public class ExpenseController {
                 )
         );
     }
+    @PutMapping("/{expenseId}")
+        public Expense updateExpense(
+        @PathVariable UUID expenseId,
+        @RequestBody UpdateExpenseRequest request
+        ) {
+                return expenseService.updateExpense(
+                expenseId,
+                request
+                );
+        }
+
+        @DeleteMapping("/{expenseId}")
+        public void deleteExpense(
+        @PathVariable UUID expenseId
+        ) {
+                expenseService.deleteExpense(expenseId);
+        }
 }

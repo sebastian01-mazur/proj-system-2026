@@ -9,6 +9,8 @@ import com.splittrip.expense.dto.RecentExpenseDto;
 import com.splittrip.trip.Trip;
 import com.splittrip.trip.TripMemberRepository;
 import com.splittrip.trip.TripRepository;
+import com.splittrip.expense.validation.ExpenseValidator;
+import com.splittrip.expense.dto.UpdateExpenseRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,18 +30,21 @@ public class ExpenseService {
     private final TripRepository tripRepository;
     private final TripMemberRepository tripMemberRepository;
     private final ExpenseCategoryRepository expenseCategoryRepository;
+    private final ExpenseValidator expenseValidator;
     public ExpenseService(
         ExpenseRepository expenseRepository,
         TripRepository tripRepository,
         TripMemberRepository tripMemberRepository,
         CurrencyService currencyService,
-        ExpenseCategoryRepository expenseCategoryRepository
+        ExpenseCategoryRepository expenseCategoryRepository,
+        ExpenseValidator expenseValidator
 ) {
         this.expenseRepository = expenseRepository;
         this.currencyService = currencyService;
         this.tripRepository = tripRepository;
         this.tripMemberRepository = tripMemberRepository;
         this.expenseCategoryRepository = expenseCategoryRepository;
+        this.expenseValidator = expenseValidator;
     }
 
     //Tworzenie nowego wydatku
@@ -51,6 +56,8 @@ public class ExpenseService {
                         "Nie znaleziono wycieczki o indexie: "
                                 + request.tripId()
                 ));
+
+        expenseValidator.validateCreateExpense(request, trip);
 
         CurrencyConversionResponse conversion =
                 currencyService.convertCurrency(
@@ -77,6 +84,79 @@ public class ExpenseService {
 
         return expenseRepository.save(expense);
     }
+
+    public Expense updateExpense(
+        UUID expenseId,
+        UpdateExpenseRequest request
+) {
+
+    Expense expense =
+            expenseRepository.findById(expenseId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Nie znaleziono wydatku o id: "
+                                    + expenseId
+                    ));
+
+    Trip trip =
+            tripRepository.findById(expense.getTripId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Nie znaleziono podróży"
+                    ));
+
+    CreateExpenseRequest validationRequest =
+        new CreateExpenseRequest(
+                trip.getId(),
+                request.payerId(),
+                request.amount(),
+                request.currency(),
+                request.categoryId(),
+                request.description(),
+                request.expenseDate()
+        );
+
+    expenseValidator.validateCreateExpense(
+            validationRequest,
+            trip
+    );
+
+    CurrencyConversionResponse conversion =
+            currencyService.convertCurrency(
+                    request.currency(),
+                    trip.getBaseCurrency(),
+                    request.amount(),
+                    request.expenseDate()
+            );
+
+    ExpenseCategoryEntity category =
+            expenseCategoryRepository.findById(
+                    request.categoryId()
+            ).orElseThrow(() -> new RuntimeException(
+                    "Nie znaleziono kategorii"
+            ));
+
+    expense.setPayerId(request.payerId());
+    expense.setAmount(request.amount());
+    expense.setCurrency(request.currency());
+    expense.setAmountInBaseCurrency(
+            conversion.getConvertedAmount()
+    );
+    expense.setCategory(category);
+    expense.setDescription(request.description());
+    expense.setExpenseDate(request.expenseDate());
+
+    return expenseRepository.save(expense);
+}
+
+        public void deleteExpense(UUID expenseId) {
+
+    Expense expense =
+            expenseRepository.findById(expenseId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Nie znaleziono wydatku"
+                    ));
+
+    expenseRepository.delete(expense);
+}
 
     //Lista wydatków podróży
     public List<Expense> getTripExpenses(UUID tripId) {
