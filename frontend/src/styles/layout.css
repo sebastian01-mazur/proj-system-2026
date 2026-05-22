@@ -39,10 +39,18 @@
 
 .content {
   width: 100%;
-  max-width: 1180px;
+  max-width: 1280px;
   margin: 0 auto;
   flex: 1;
-  padding: 28px;
+  padding: 18px;
+}
+
+.content_trip {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  flex: 1;
+  padding: 18px;
 }
 
 .bottom-nav {
@@ -129,4 +137,23 @@
     font-weight: bold;
     font-size: 13px;
   }
+}
+
+.form-error {
+  font-size: 0.8rem;
+  color: #e53935 !important;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+.input-error {
+  border: 1px solid #e53935 !important;
+}
+
+.trip-image-preview {
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
 }
