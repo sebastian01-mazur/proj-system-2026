@@ -138,3 +138,22 @@
     font-size: 13px;
   }
 }
+
+.form-error {
+  font-size: 0.8rem;
+  color: #e53935 !important;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.input-error {
+  border: 1px solid #e53935 !important;
+}
+
+.trip-image-preview {
+  margin-top: 10px;
+  width: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
