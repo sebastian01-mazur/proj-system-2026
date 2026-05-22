@@ -159,8 +159,14 @@ public class ExpenseService {
     expense.setDescription(request.description());
     expense.setExpenseDate(request.expenseDate());
 
-    return expenseRepository.save(expense);
+    expenseSplitRepository.deleteByExpenseId(expense.getId());
+        createExpenseSplits(
+                expense,
+                request.participants()
+        );
+        return expenseRepository.save(expense);
 }
+
 
         public void deleteExpense(UUID expenseId) {
 

@@ -11,4 +11,6 @@ public interface ExpenseSplitRepository
     List<ExpenseSplit> findByExpenseId(UUID expenseId);
 
     List<ExpenseSplit> findByUserId(UUID userId);
+
+    void deleteByExpenseId(UUID expenseId);
 }

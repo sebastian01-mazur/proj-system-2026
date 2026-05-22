@@ -3,6 +3,7 @@ package com.splittrip.expense.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.List;
 
 public record UpdateExpenseRequest(
 
@@ -16,7 +17,9 @@ public record UpdateExpenseRequest(
 
         String description,
 
-        LocalDate expenseDate
+        LocalDate expenseDate,
+
+        List<ExpenseParticipantDto> participants
 
 ) {
 }
