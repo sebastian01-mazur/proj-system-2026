@@ -28,7 +28,6 @@ export default function NewTrip() {
 
         setImageFile(file);
 
-        // preview (działa lokalnie)
         const previewUrl = URL.createObjectURL(file);
         setImagePreview(previewUrl);
     }

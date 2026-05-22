@@ -75,11 +75,23 @@
 .back-btn {
   border: none;
   background: transparent;
-  margin-bottom: 12px;
+  margin-bottom: 7px;
   font-size: 24px;
   color: #77b73d;
   font-weight: bold;
   cursor: pointer;
+  margin-right: 1150px;
+}
+
+.back-btn-trip {
+  border: none;
+  background: transparent;
+  margin-bottom: 7px;
+  font-size: 24px;
+  color: #77b73d;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 570px;
 }
 
 .trip-form {
