@@ -47,16 +47,16 @@ export default function Login() {
                     <label>E-mail</label>
                     <input
                         type="email"
-                        value={email}
                         onChange={(event) => setEmail(event.target.value)}
+                        placeholder="kowalski@gmail.com"
                         required
                     />
 
                     <label>Hasło</label>
                     <input
                         type="password"
-                        value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        placeholder="twoje haslo"
                         required
                     />
 
