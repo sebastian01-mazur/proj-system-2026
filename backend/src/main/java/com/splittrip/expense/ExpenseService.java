@@ -190,10 +190,29 @@ public class ExpenseService {
         expenseRepository.findByTripId(tripId);
         for (Expense expense : expenses) {
             expense.setShares(expenseSplitRepository.findByExpenseId(expense.getId()));
-}
+        }
 
-return expenses;
-    }
+                return expenses;
+        }
+
+        //Pobranie pojedynczego wydatku po ID
+        public Expense getExpenseById(UUID expenseId) {
+
+        Expense expense =
+            expenseRepository.findById(expenseId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Nie znaleziono wydatku o id: "
+                                    + expenseId
+                    ));
+
+        expense.setShares(
+            expenseSplitRepository.findByExpenseId(
+                    expense.getId()
+            )
+        );
+
+                return expense;
+        }
 
     //Ostatnie wydatki użytkownika dla dashboardu
     public List<RecentExpenseDto> getRecentExpensesForUser(

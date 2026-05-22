@@ -74,7 +74,7 @@ public class ExpenseController {
     @PutMapping("/{expenseId}")
         public Expense updateExpense(
         @PathVariable UUID expenseId,
-        @RequestBody UpdateExpenseRequest request
+                @RequestBody UpdateExpenseRequest request
         ) {
                 return expenseService.updateExpense(
                 expenseId,
@@ -82,9 +82,16 @@ public class ExpenseController {
                 );
         }
 
+        @GetMapping("/{expenseId}")
+        public Expense getExpenseById(
+                @PathVariable UUID expenseId
+        ) {
+                return expenseService.getExpenseById(expenseId);
+        }
+
         @DeleteMapping("/{expenseId}")
         public void deleteExpense(
-        @PathVariable UUID expenseId
+                @PathVariable UUID expenseId
         ) {
                 expenseService.deleteExpense(expenseId);
         }
