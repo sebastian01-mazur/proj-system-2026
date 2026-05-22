@@ -56,13 +56,25 @@ export const trips = [
 export const invitations = [
   {
     id: 1,
+    type: "trip",
     user: "Piotr Wiśniewski",
     trip: "Wieczór kawalerski",
   },
   {
     id: 2,
+    type: "trip",
     user: "Jan Kowalski",
     trip: "Miesiąc miodowy",
+  },
+  {
+    id: 3,
+    type: "friend",
+    user: "Anna Nowak",
+  },
+  {
+    id: 4,
+    type: "friend",
+    user: "Tomasz Zieliński",
   },
 ];
 
