@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ExpenseService {
@@ -54,6 +55,7 @@ public class ExpenseService {
     }
 
     //Tworzenie nowego wydatku
+    @Transactional
     public Expense createExpense(CreateExpenseRequest request) {
 
         Trip trip =
@@ -99,6 +101,7 @@ public class ExpenseService {
         return savedExpense;
     }
 
+    @Transactional
     public Expense updateExpense(
         UUID expenseId,
         UpdateExpenseRequest request
@@ -167,16 +170,17 @@ public class ExpenseService {
         return expenseRepository.save(expense);
 }
 
-
+        @Transactional
         public void deleteExpense(UUID expenseId) {
 
-    Expense expense =
+        Expense expense =
             expenseRepository.findById(expenseId)
                     .orElseThrow(() -> new RuntimeException(
                             "Nie znaleziono wydatku"
                     ));
 
-    expenseRepository.delete(expense);
+        expenseSplitRepository.deleteByExpenseId(expense.getId());
+        expenseRepository.delete(expense);
 }
 
     //Lista wydatków podróży
