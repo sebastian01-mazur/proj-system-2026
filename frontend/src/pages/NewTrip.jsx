@@ -19,6 +19,20 @@ export default function NewTrip() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState("");
+
+    function handleImageChange(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImageFile(file);
+
+        // preview (działa lokalnie)
+        const previewUrl = URL.createObjectURL(file);
+        setImagePreview(previewUrl);
+    }
+
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -31,7 +45,9 @@ export default function NewTrip() {
             startDate,
             endDate,
             date: `${startDate} — ${endDate}`,
-            image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+            image:
+                imagePreview ||
+                "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
         });
 
         alert(`Utworzono podróż: ${newTrip.name}`);
@@ -40,8 +56,8 @@ export default function NewTrip() {
 
     return (
         <Layout>
-            <main className="content">
-                <Link to="/home" className="back-btn">
+            <main className="content_trip">
+                <Link to="/home" className="back-btn-trip">
                     ← Wróć
                 </Link>
 
@@ -119,6 +135,25 @@ export default function NewTrip() {
                             placeholder="np. 1500"
                             required
                         />
+
+                        <label>Zdjęcie podróży</label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                        />
+
+                        {imagePreview && (
+                            <img
+                                src={imagePreview}
+                                alt="Podgląd"
+                                style={{
+                                    marginTop: "10px",
+                                    width: "100%",
+                                    borderRadius: "12px",
+                                }}
+                            />
+                        )}
 
                         <Button type="submit">Utwórz podróż</Button>
                     </form>
