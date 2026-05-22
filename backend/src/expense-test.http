@@ -1,132 +1,141 @@
+### =========================================
+### MODUŁ EXPENSE - FINALNE TESTY REGRESYJNE
+### =========================================
 
-### 0. Dodanie wydatku
+### BASE URL
+@baseUrl = http://localhost:8001
 
-POST http://localhost:8001/api/expenses
+
+### =========================================
+### 1. DODANIE NOWEGO WYDATKU - POPRAWNY PRZYPADEK
+### =========================================
+
+POST {{baseUrl}}/api/expenses
 Content-Type: application/json
 
 {
   "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
-  "payerId": "55555555-5555-5555-5555-555555555555",
-  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "amount": 120.50,
-  "currency": "USD",
-  "description": "Paliwo",
-  "expenseDate": "2026-07-15"
-}
-
-###
-
-### 1. Lista wydatków podróży
-
-GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
-
-###
-
-### 2. Ostatnie wydatki użytkownika
-
-GET http://localhost:8001/api/expenses/recent/11111111-1111-1111-1111-111111111111
-
-###
-
-### 3. Statystyki budżetowe użytkownika
-
-GET http://localhost:8001/api/expenses/statistics/55555555-5555-5555-5555-555555555555
-
-###
-
-### 4. Czy zapis trafia do bazy danych
-GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
-
-###
-
-### 5. Nieistniejący trip
-
-POST http://localhost:8001/api/expenses
-Content-Type: application/json
-
-{
-  "tripId": "00000000-0000-0000-0000-000000000000",
-  "payerId": "55555555-5555-5555-5555-555555555555",
-  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "amount": 120.50,
-  "currency": "USD",
-  "description": "TEST",
-  "expenseDate": "2025-05-15"
-}
-
-###
-
-### 6. Nieistniejąca kategoria
-
-POST http://localhost:8001/api/expenses
-Content-Type: application/json
-
-{
-  "tripId": "bbbbbbb7-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-  "payerId": "55555555-5555-5555-5555-555555555555",
-  "categoryId": "00000000-0000-0000-0000-000000000000",
-  "amount": 120.50,
-  "currency": "USD",
-  "description": "TEST",
-  "expenseDate": "2026-07-11"
-}
-
-###
-
-### 7. Nieistniejąca waluta
-
-POST http://localhost:8001/api/expenses
-Content-Type: application/json
-
-{
-  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
-  "payerId": "55555555-5555-5555-5555-555555555555",
-  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "amount": 120.50,
-  "currency": "ABC",
-  "description": "TEST",
-  "expenseDate": "2026-07-11"
-}
-
-###
-
-### 8. update wydatku
-PUT http://localhost:8001/api/expenses/ccccccc2-cccc-cccc-cccc-cccccccccccc
-Content-Type: application/json
-
-{
-  "payerId": "22222222-2222-2222-2222-222222222222",
-  "categoryId": "aaaaaaa2-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "amount": 999.99,
-  "currency": "EUR",
-  "description": "Zaktualizowany wydatek",
-  "expenseDate": "2026-07-11"
-}
-
-###
-
-### 9. delete wydatku
-DELETE http://localhost:8001/api/expenses/9aba5ccc-2771-47e5-981a-8928269c3bf3
-
-###
-
-GET http://localhost:8001/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
-
-### 10. test rozliczenia podróży
-GET http://localhost:8001/api/expenses/settlements/bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb
-### 11. test automatycznego tworzenia rozliczeń
-
-POST http://localhost:8001/api/expenses
-Content-Type: application/json
-
-{
-  "tripId": "bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-  "payerId": "22222222-2222-2222-2222-222222222222",
+  "payerId": "11111111-1111-1111-1111-111111111111",
   "amount": 300,
-  "currency": "USD",
-  "categoryId": "aaaaaaa5-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "description": "Automatyczny split test",
-  "expenseDate": "2026-05-20",
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Finalny test regresyjny transportu",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    },
+    {
+      "userId": "22222222-2222-2222-2222-222222222222",
+      "shareAmount": 100
+    },
+    {
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "shareAmount": 100
+    }
+  ]
+}
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+### Wydatek zapisany poprawnie
+### Udziały zapisane poprawnie
+### convertedAmount obecny
+
+
+### =========================================
+### 2. POBRANIE WYDATKÓW DLA PODRÓŻY
+### =========================================
+
+GET {{baseUrl}}/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+### Nowo dodany wydatek widoczny
+### shares[] obecne
+### convertedAmount obecny
+
+
+### =========================================
+### 3. WALIDACJA - NIEPOPRAWNA SUMA UDZIAŁÓW
+### =========================================
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Niepoprawna suma udziałów",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    }
+  ]
+}
+
+### OCZEKIWANY WYNIK:
+### HTTP 400
+### Komunikat:
+### "Suma udziałów musi być równa całkowitej kwocie wydatku"
+
+
+### =========================================
+### 4. WALIDACJA - DUPLIKAT UCZESTNIKA
+### =========================================
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Duplikat uczestnika",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 150
+    },
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 150
+    }
+  ]
+}
+
+### OCZEKIWANY WYNIK:
+### HTTP 400
+### "Użytkownik nie może występować wielokrotnie w podziale kosztów"
+
+
+### =========================================
+### 5. WALIDACJA - PŁATNIK NIE JEST UCZESTNIKIEM PODZIAŁU
+### =========================================
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Brak płatnika w participants",
+  "expenseDate": "2026-07-12",
 
   "participants": [
     {
@@ -139,3 +148,87 @@ Content-Type: application/json
     }
   ]
 }
+
+### OCZEKIWANY WYNIK:
+### HTTP 400
+### "Płatnik musi być uczestnikiem podziału kosztów"
+
+
+### =========================================
+### 6. POBRANIE ROZLICZEŃ (SETTLEMENTS)
+### =========================================
+
+GET {{baseUrl}}/api/expenses/settlements/b0d80956-5047-4150-b1b4-dddb978d6784
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+
+
+### =========================================
+### 7. OSTATNIE WYDATKI UŻYTKOWNIKA
+### =========================================
+
+GET {{baseUrl}}/api/expenses/recent/11111111-1111-1111-1111-111111111111
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+### Lista ostatnich wydatków użytkownika
+
+
+### =========================================
+### 8. USUNIĘCIE WYDATKU
+### =========================================
+
+### UWAGA:
+### Zamień EXPENSE_ID na prawdziwe ID wygenerowane w teście nr 1
+
+DELETE {{baseUrl}}/api/expenses/EXPENSE_ID
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+### Wydatek usunięty
+### Powiązane shares usunięte
+### Settlementy zaktualizowane
+
+
+### =========================================
+### 9. POBRANIE POJEDYNCZEGO WYDATKU
+### =========================================
+
+### UWAGA:
+### Wstaw prawdziwe ID istniejącego wydatku
+
+GET {{baseUrl}}/api/expenses/b97a0778-23b4-4285-a859-4ae33c270283
+
+### OCZEKIWANY WYNIK:
+### HTTP 200
+### Szczegóły pojedynczego wydatku
+
+
+### =========================================
+### 10. WALIDACJA - UJEMNA KWOTA WYDATKU
+### =========================================
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": -100,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Niepoprawna ujemna kwota",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    }
+  ]
+}
+
+### OCZEKIWANY WYNIK:
+### HTTP 400
+### "Kwota wydatku musi być większa od 0"
