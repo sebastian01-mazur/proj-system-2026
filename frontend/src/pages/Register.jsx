@@ -91,32 +91,32 @@ export default function Register() {
                 <form onSubmit={handleSubmit} className="auth-form">
                     <label>Imię i nazwisko</label>
                     <input
-                        value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
+                        placeholder="Piotr Kowalski"
                         required
                     />
 
                     <label>Email</label>
                     <input
                         type="email"
-                        value={email}
                         onChange={(event) => setEmail(event.target.value)}
+                        placeholder="kowalski@gmail.com"
                         required
                     />
 
                     <label>Hasło</label>
                     <input
                         type="password"
-                        value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        placeholder="twoje haslo"
                         required
                     />
 
                     <label>Powtórz hasło</label>
                     <input
                         type="password"
-                        value={confirmPassword}
                         onChange={(event) => setConfirmPassword(event.target.value)}
+                        placeholder="Powtórz haslo"
                         required
                     />
 
