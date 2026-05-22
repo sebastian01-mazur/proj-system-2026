@@ -85,7 +85,7 @@ export default function NewTrip() {
                         <input
                             value={tripName}
                             onChange={(e) => setTripName(e.target.value)}
-                            placeholder="np. Weekend w Paryżu"
+                            placeholder="Weekend w Paryżu"
                             required
                         />
 
@@ -107,7 +107,7 @@ export default function NewTrip() {
                         <input
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
-                            placeholder="np. Paryż"
+                            placeholder="Paryż"
                             required
                         />
 
@@ -157,7 +157,7 @@ export default function NewTrip() {
                             type="number"
                             value={budget}
                             onChange={(e) => setBudget(e.target.value)}
-                            placeholder="np. 1500"
+                            placeholder="1500"
                             required
                         />
 
