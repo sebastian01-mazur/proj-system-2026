@@ -18,15 +18,22 @@ export default function NewTrip() {
     const [budget, setBudget] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-
-    const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
+    const [dateError, setDateError] = useState("");
+
+    function validateDates(start, end) {
+        if (!start || !end) return "";
+
+        if (new Date(start) > new Date(end)) {
+            return "Data rozpoczęcia nie może być późniejsza niż data zakończenia";
+        }
+
+        return "";
+    }
 
     function handleImageChange(e) {
         const file = e.target.files[0];
         if (!file) return;
-
-        setImageFile(file);
 
         const previewUrl = URL.createObjectURL(file);
         setImagePreview(previewUrl);
@@ -34,6 +41,13 @@ export default function NewTrip() {
 
     async function handleSubmit(event) {
         event.preventDefault();
+
+        const error = validateDates(startDate, endDate);
+
+        if (error) {
+            setDateError(error);
+            return;
+        }
 
         const newTrip = await createTrip({
             name: tripName,
@@ -100,18 +114,30 @@ export default function NewTrip() {
                         <label>Data rozpoczęcia</label>
                         <input
                             type="date"
+                            className={dateError ? "input-error" : ""}
                             value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
+                            onChange={(e) => {
+                                setStartDate(e.target.value);
+                                setDateError(validateDates(e.target.value, endDate));
+                            }}
                             required
                         />
 
                         <label>Data zakończenia</label>
                         <input
                             type="date"
+                            className={dateError ? "input-error" : ""}
                             value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
+                            onChange={(e) => {
+                                setEndDate(e.target.value);
+                                setDateError(validateDates(startDate, e.target.value));
+                            }}
                             required
                         />
+
+                        {dateError && (
+                            <p className="form-error">{dateError}</p>
+                        )}
 
                         <label>Waluta bazowa</label>
                         <select
@@ -145,12 +171,8 @@ export default function NewTrip() {
                         {imagePreview && (
                             <img
                                 src={imagePreview}
-                                alt="Podgląd"
-                                style={{
-                                    marginTop: "10px",
-                                    width: "100%",
-                                    borderRadius: "12px",
-                                }}
+                                alt="Podgląd zdjęcia podróży"
+                                className="trip-image-preview"
                             />
                         )}
 
