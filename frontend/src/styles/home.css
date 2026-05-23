@@ -1,0 +1,487 @@
+.home-content {
+  max-width: 1400px;
+}
+
+.home-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.map-card-link,
+.weather-card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.map-widget {
+  padding: 0;
+  overflow: hidden;
+  height: 220px;
+  border-radius: 16px;
+}
+
+.google-map-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.weather-widget {
+  height: 220px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: white;
+}
+
+.weather-main {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.weather-main span {
+  font-size: 62px;
+}
+
+.weather-main strong {
+  display: block;
+  font-size: 58px;
+  line-height: 1;
+  color: #0b376d;
+}
+
+.weather-main p,
+.weather-location p {
+  margin: 6px 0 0;
+  color: #7b8794;
+}
+
+.weather-location {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+  color: #0b376d;
+}
+
+.weather-location > span {
+  color: #21a453;
+}
+
+.weather-range {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 10px;
+  color: #0b376d;
+  font-weight: bold;
+}
+
+.home-section {
+  margin-bottom: 30px;
+}
+
+.home-trips-panel {
+  padding: 18px;
+}
+
+.trip-tabs {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 14px 0 18px;
+}
+
+.trip-tab {
+  border: none;
+  background: transparent;
+  color: #7b8794;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.trip-tab.active {
+  background: #d8efc4;
+  color: #5ca832;
+}
+
+.home-trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.home-trip-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 18px;
+  background: #edf6e5;
+  border-radius: 14px;
+  padding: 14px;
+  color: #0b376d;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.home-trip-row.finished {
+  background: #e5e7eb;
+}
+
+.home-trip-row img {
+  width: 100%;
+  height: 135px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.home-trip-row-content p {
+  margin: 5px 0;
+  color: #6b7280;
+}
+
+.home-trip-row-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.home-trip-row-header h4 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.trip-status-pill {
+  background: #a8d47b;
+  color: #4b7f25;
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.expand-trips-btn {
+  display: block;
+  margin: 18px auto 0;
+  border: none;
+  background: transparent;
+  color: #7b8794;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.home-expenses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.home-expense-card {
+  position: relative;
+}
+
+.expense-mini-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.expense-mini-header p {
+  margin: 4px 0 0;
+  color: #7b8794;
+}
+
+.home-expense-card h2 {
+  margin: 8px 0 4px;
+  color: #0b376d;
+}
+
+.home-expense-card span {
+  color: #5ca832;
+  font-weight: bold;
+}
+
+.expense-details-link {
+  display: block;
+  margin-top: 10px;
+  text-align: right;
+  color: #5f8f2f;
+  font-weight: bold;
+}
+
+.user-trip-expenses-card,
+.spending-stats-card {
+  max-width: 560px;
+}
+
+.user-trip-expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.user-trip-expense-row {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.user-trip-expense-row img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-trip-expense-info,
+.user-trip-expense-amount {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-trip-expense-info strong,
+.user-trip-expense-amount strong {
+  color: #0b376d;
+}
+
+.user-trip-expense-info span {
+  color: #7b8794;
+  font-size: 13px;
+}
+
+.user-trip-expense-amount {
+  text-align: right;
+}
+
+.user-trip-expense-amount span {
+  color: #5ca832;
+  font-size: 13px;
+}
+
+.hidden-count-row {
+  display: flex;
+  justify-content: space-between;
+  color: #7b8794;
+  font-weight: bold;
+  padding: 2px 4px;
+}
+
+.home-divider {
+  height: 1px;
+  background: #d1d5db;
+  margin: 6px 0;
+}
+
+.user-trip-expense-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-trip-expense-total div {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+}
+
+.user-trip-expense-total strong {
+  color: #0b376d;
+}
+
+.user-trip-expense-total span {
+  color: #5ca832;
+  font-size: 13px;
+}
+
+.stats-card-header {
+  display: grid;
+  grid-template-columns: 54px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.stats-icon {
+  width: 54px;
+  height: 54px;
+  background: #edf6e5;
+  color: #5ca832;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.stats-card-header h4 {
+  margin: 0;
+  color: #0b376d;
+}
+
+.stats-card-header p {
+  margin: 4px 0 0;
+  color: #7b8794;
+  font-size: 13px;
+}
+
+.stats-open-link {
+  color: #5f8f2f;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.spending-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spending-ranking-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.spending-ranking-row.top-person {
+  background: #f5fbef;
+  border: 1px solid #cfe8bf;
+}
+
+.ranking-user {
+  display: grid;
+  grid-template-columns: 56px 36px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.ranking-photo {
+  width: 56px;
+  height: 56px;
+  background: #eef1ea;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.ranking-position {
+  background: #e8eef7;
+  color: #2f5ea7;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.top-person .ranking-position {
+  background: #d8efc4;
+  color: #5ca832;
+}
+
+.ranking-user strong,
+.ranking-amount strong {
+  color: #0b376d;
+}
+
+.ranking-user p {
+  margin: 4px 0 0;
+  color: #5ca832;
+  font-size: 13px;
+}
+
+.ranking-amount {
+  min-width: 120px;
+  text-align: right;
+}
+
+.ranking-progress {
+  width: 120px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.ranking-progress div {
+  height: 100%;
+  background: #0b376d;
+}
+
+@media (min-width: 1000px) {
+  .user-trip-expenses-card,
+  .spending-stats-card {
+    max-width: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .home-top-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-widget,
+  .weather-widget {
+    height: 180px;
+  }
+
+  .weather-widget {
+    padding: 16px;
+  }
+
+  .weather-main span,
+  .weather-main strong {
+    font-size: 42px;
+  }
+
+  .home-trip-row {
+    grid-template-columns: 105px 1fr;
+    gap: 12px;
+  }
+
+  .home-trip-row img {
+    height: 120px;
+  }
+
+  .home-trip-row-header {
+    flex-direction: column;
+  }
+
+  .home-trip-row-header h4 {
+    font-size: 18px;
+  }
+
+  .trip-tabs {
+    gap: 8px;
+  }
+
+  .trip-tab {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .spending-ranking-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-amount {
+    text-align: left;
+  }
+
+  .ranking-progress {
+    width: 100%;
+  }
+}

@@ -1,0 +1,155 @@
+@baseUrl = http://localhost:8001
+
+### 1. DODANIE NOWEGO WYDATKU 
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Finalny test regresyjny transportu",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    },
+    {
+      "userId": "22222222-2222-2222-2222-222222222222",
+      "shareAmount": 100
+    },
+    {
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "shareAmount": 100
+    }
+  ]
+}
+
+### 2. POBRANIE WYDATKÓW DLA PODRÓŻY
+
+GET {{baseUrl}}/api/expenses/trip/b0d80956-5047-4150-b1b4-dddb978d6784
+
+### 3. WALIDACJA - NIEPOPRAWNA SUMA UDZIAŁÓW
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Niepoprawna suma udziałów",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    }
+  ]
+}
+
+
+### 4. WALIDACJA - DUPLIKAT UCZESTNIKA
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Duplikat uczestnika",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 150
+    },
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 150
+    }
+  ]
+}
+
+
+### 5. WALIDACJA - PŁATNIK NIE JEST UCZESTNIKIEM PODZIAŁU
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": 300,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Brak płatnika w participants",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "22222222-2222-2222-2222-222222222222",
+      "shareAmount": 150
+    },
+    {
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "shareAmount": 150
+    }
+  ]
+}
+
+
+### 6. POBRANIE ROZLICZEŃ (SETTLEMENTS)
+
+GET {{baseUrl}}/api/expenses/settlements/b0d80956-5047-4150-b1b4-dddb978d6784
+
+
+### 7. OSTATNIE WYDATKI UŻYTKOWNIKA
+
+GET {{baseUrl}}/api/expenses/recent/11111111-1111-1111-1111-111111111111
+
+
+### 8. USUNIĘCIE WYDATKU
+
+
+DELETE {{baseUrl}}/api/expenses/EXPENSE_ID
+
+
+### 9. POBRANIE POJEDYNCZEGO WYDATKU
+
+GET {{baseUrl}}/api/expenses/b97a0778-23b4-4285-a859-4ae33c270283
+
+
+### 10. WALIDACJA - UJEMNA KWOTA WYDATKU
+
+POST {{baseUrl}}/api/expenses
+Content-Type: application/json
+
+{
+  "tripId": "b0d80956-5047-4150-b1b4-dddb978d6784",
+  "payerId": "11111111-1111-1111-1111-111111111111",
+  "amount": -100,
+  "currency": "EUR",
+  "categoryId": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "description": "Niepoprawna ujemna kwota",
+  "expenseDate": "2026-07-12",
+
+  "participants": [
+    {
+      "userId": "11111111-1111-1111-1111-111111111111",
+      "shareAmount": 100
+    }
+  ]
+}

@@ -6,6 +6,8 @@ import Register from "./pages/Register";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import ForgotPassword from "./pages/ForgotPassword";
+import Home from "./pages/Home.jsx"
+import NewTrip from "./pages/NewTrip.jsx"
 
 function HomeMock() {
     return <h1 style={{ padding: 40 }}>Home (tymczasowy)</h1>;
@@ -22,6 +24,8 @@ export default function App() {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/new-trip" element={<NewTrip />} />
                 <Route
                     path="/home"
                     element={
