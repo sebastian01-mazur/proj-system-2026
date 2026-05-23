@@ -1,5 +1,8 @@
 package com.splittrip.dashboard;
 
+import com.splittrip.expense.ExpenseService;
+import com.splittrip.expense.dto.BudgetStatisticsDto;
+import com.splittrip.expense.dto.RecentExpenseDto;
 import com.splittrip.trip.Trip;
 import com.splittrip.trip.TripService;
 import org.springframework.stereotype.Service;
@@ -13,12 +16,12 @@ import java.util.UUID;
 public class DashboardService {
     private final TripService tripService;
 
-    public DashboardService(TripService tripService) {
+    public DashboardService(TripService tripService, ExpenseService expenseService) {
         this.tripService = tripService;
+        this.expenseService = expenseService;
     }
 
-    //GJ>SS czekam na Twoja czesc z modulu expense
-    //private final ExpenseService expenseService;
+    private final ExpenseService expenseService;
 
     public DashboardSummaryResponse getSummaryForUser(UUID userId) {
         List<Trip> userTrips = tripService.getUserTrips(userId);
@@ -28,18 +31,10 @@ public class DashboardService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        //GJ>SS tu tez do odkomentowania jak zrobisz...
-        //List<RecentExpenseDto> recentExpenses = expenseService.getRecentExpensesForUser(userId, 5);
-        //BudgetStatisticsDto stats = expenseService.getBudgetStatisticsForUser(userId);
+        List<RecentExpenseDto> recentExpenses = expenseService.getRecentExpensesForUser(userId, 5);
+        BudgetStatisticsDto stats = expenseService.getBudgetStatisticsForUser(userId);
         //
-        //return new DashboardSummaryResponse(userTrips, totalBudget, recentExpenses, stats);
+        return new DashboardSummaryResponse(userTrips, totalBudget, recentExpenses, stats);
 
-        //wtedy to ponizej usun:
-        return new DashboardSummaryResponse(
-                userTrips,
-                totalBudget,
-                List.of(),
-                null
-        );
     }
 }
