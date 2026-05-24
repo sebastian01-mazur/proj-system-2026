@@ -1,6 +1,8 @@
 package com.splittrip.report;
 
 import com.splittrip.expense.Expense;
+import com.splittrip.expense.ExpenseRepository;
+import com.splittrip.expense.ExpenseSplit;
 import com.splittrip.trip.Trip;
 import com.splittrip.trip.TripRepository;
 import org.springframework.stereotype.Service;
@@ -63,7 +65,7 @@ public class ReportService {
                     BigDecimal.ZERO
             ));
 
-            for (ExpenseShare share : expense.getShares()) {
+            for (ExpenseSplit share : expense.getShares()) {
                 UUID participantId = share.getUserId();
                 participantReports.putIfAbsent(participantId, new ParticipantReportResponse(participantId, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
                 ParticipantReportResponse shareReport = participantReports.get(participantId);

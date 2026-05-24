@@ -3,17 +3,17 @@
 ---
 
 ### TEST 1: Raport wydatków
-GET http://localhost:8081/api/trips/{{tripId}}/reports/expenses
+GET http://localhost:8080/api/trips/{{tripId}}/reports/expenses
 Accept: application/json
 
 ###
 
 ### TEST 2: Raport uczestników
-GET http://localhost:8081/api/trips/{{tripId}}/reports/participants
+GET http://localhost:8080/api/trips/{{tripId}}/reports/participants
 Accept: application/json
 
 ###
 
 ### TEST 3: Bilans rozliczeń
-GET http://localhost:8081/api/trips/{{tripId}}/settlements
+GET http://localhost:8080/api/trips/{{tripId}}/settlements
 Accept: application/json
