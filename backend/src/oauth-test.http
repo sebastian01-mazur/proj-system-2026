@@ -28,4 +28,4 @@ GET http://localhost:8001/test/secure
 
 ### Test endpointu zabezpieczonego z tokenem
 GET http://localhost:8001/test/secure
-Authorization: Bearer TU_WKLEJ_TOKEN
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc5OTAzMzM3LCJleHAiOjE3Nzk5ODk3Mzd9.gi17LU0TROFk_88gEkQA4lqq2LrjF2LkzQVTM_QWNhM
