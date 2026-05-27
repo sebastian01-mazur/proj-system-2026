@@ -9,7 +9,9 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home.jsx";
 import NewTrip from "./pages/NewTrip.jsx";
 import Invitations from "./pages/Invitations.jsx";
-
+import TripDetails from "./pages/TripDetails.jsx"
+import Expenses from "./pages/Expenses.jsx"
+import Reports from "./pages/Reports.jsx"
 function HomeMock() {
     return <h1 style={{ padding: 40 }}>Home (tymczasowy)</h1>;
 }
@@ -28,6 +30,9 @@ export default function App() {
                 <Route path="/home" element={<Home />} />
                 <Route path="/new-trip" element={<NewTrip />} />
                 <Route path="/invitations" element={<Invitations />} />
+                <Route path="/trip/:id" element={<TripDetails />} />
+                <Route path="/trip/:id/expenses" element={<Expenses />} />
+                <Route path="/trip/:id/reports" element={<Reports />} />
                 <Route
                     path="/home"
                     element={
