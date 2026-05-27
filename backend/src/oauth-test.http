@@ -18,3 +18,14 @@ Content-Type: application/json
   "email": "test@test.com",
   "password": "123456"
 }
+
+###
+
+### Test endpointu zabezpieczonego bez tokena
+GET http://localhost:8001/test/secure
+
+###
+
+### Test endpointu zabezpieczonego z tokenem
+GET http://localhost:8001/test/secure
+Authorization: Bearer TU_WKLEJ_TOKEN
