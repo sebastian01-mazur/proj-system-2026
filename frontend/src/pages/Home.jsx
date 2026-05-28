@@ -5,14 +5,12 @@ import Layout from "../components/Layout";
 import PageTitle from "../components/ui/PageTitle";
 import Card from "../components/ui/Card";
 
-import { getTrips } from "../services/tripService";
-import { expenses } from "../data/mockData";
-
+import { getTrips, getAllExpenses } from "../services/tripService";
 import { getCurrentUser } from "../services/authService";
-
 
 export default function Home() {
   const [trips, setTrips] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [weather, setWeather] = useState(null);
@@ -22,12 +20,14 @@ export default function Home() {
   const [expandedTrips, setExpandedTrips] = useState(false);
   const [expandedUserExpenses, setExpandedUserExpenses] = useState(false);
 
-  const currentUserName = "Jan Kowalski";
+  const user = getCurrentUser();
+  const currentUserName = user?.name || "Jan Kowalski";
 
   const exchangeRates = {
     EUR: 4.32,
     USD: 3.98,
     GBP: 5.07,
+    CHF: 4.55,
     PLN: 1,
   };
 
@@ -38,13 +38,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    async function loadTrips() {
-      const data = await getTrips();
-      setTrips(data);
+    async function loadData() {
+      const tripsData = await getTrips();
+      const expensesData = await getAllExpenses();
+
+      setTrips(tripsData);
+      setExpenses(expensesData);
       setLoading(false);
     }
 
-    loadTrips();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -80,20 +83,54 @@ export default function Home() {
     if ([51, 53, 55, 61, 63, 65].includes(code)) return "🌧️";
     if ([71, 73, 75].includes(code)) return "❄️";
     if ([95, 96, 99].includes(code)) return "⛈️";
-
     return "🌤️";
   }
 
   function convertToPln(amount, currency) {
-    return Math.round(Number(amount) * (exchangeRates[currency] || 1));
+    return Math.round(Number(amount || 0) * (exchangeRates[currency] || 1));
   }
 
-  function getPersonAvatar(name) {
+  function formatMoney(amount) {
+    return Number(amount || 0).toFixed(2);
+  }
+
+  function getPersonAvatar(name = "") {
     if (name.includes("Piotr")) return "👨🏻";
     if (name.includes("Joanna")) return "👩🏻";
     if (name.includes("Jan")) return "👨🏻‍💼";
     if (name.includes("Marek")) return "👨🏼";
+    if (name.includes("Marysia")) return "👩🏼";
+    if (name.includes("Mateusz")) return "👨🏼";
     return "👤";
+  }
+
+  function getExpenseName(expense) {
+    return expense.name || expense.title || expense.category || "Wydatek";
+  }
+
+  function getExpenseDate(expense) {
+    return expense.expenseDate || expense.date || "";
+  }
+
+  function getExpenseOriginalAmount(expense) {
+    return Number(expense.originalAmount ?? expense.amount ?? 0);
+  }
+
+  function getExpenseOriginalCurrency(expense) {
+    return expense.originalCurrency || expense.currency || "PLN";
+  }
+
+  function getExpenseConvertedAmount(expense) {
+    const originalAmount = getExpenseOriginalAmount(expense);
+    const originalCurrency = getExpenseOriginalCurrency(expense);
+
+    return Number(
+      expense.convertedAmount ?? convertToPln(originalAmount, originalCurrency) ?? 0
+    );
+  }
+
+  function getExpenseBaseCurrency(expense) {
+    return expense.baseCurrency || "PLN";
   }
 
   const tabs = ["Wszystkie", "W trakcie", "Planowane", "Zakończone"];
@@ -108,24 +145,31 @@ export default function Home() {
         );
 
   const visibleTrips = expandedTrips ? filteredTrips : filteredTrips.slice(0, 1);
-
-  const latestExpenses = expenses.slice(0, 2);
+  const latestExpenses = [...expenses].slice(-2).reverse();
+  const firstTripId = trips[0]?.id || 1;
 
   const completedTrips = trips.filter((trip) => trip.status === "Zakończone");
 
   const userTripExpenses = completedTrips
     .map((trip) => {
       const tripUserExpenses = expenses.filter(
-        (expense) => expense.tripId === trip.id && expense.paidBy === currentUserName
+        (expense) =>
+          Number(expense.tripId) === Number(trip.id) &&
+          expense.paidBy === currentUserName
       );
 
       const amount = tripUserExpenses.reduce(
-        (sum, expense) => sum + Number(expense.amount),
+        (sum, expense) => sum + getExpenseConvertedAmount(expense),
         0
       );
 
       const pln = tripUserExpenses.reduce(
-        (sum, expense) => sum + convertToPln(expense.amount, expense.currency),
+        (sum, expense) =>
+          sum +
+          convertToPln(
+            getExpenseOriginalAmount(expense),
+            getExpenseOriginalCurrency(expense)
+          ),
         0
       );
 
@@ -149,12 +193,12 @@ export default function Home() {
     userTripExpenses.length - visibleUserExpenses.length;
 
   const totalUserExpenses = userTripExpenses.reduce(
-    (sum, item) => sum + item.amount,
+    (sum, item) => sum + Number(item.amount || 0),
     0
   );
 
   const totalUserExpensesPln = userTripExpenses.reduce(
-    (sum, item) => sum + item.pln,
+    (sum, item) => sum + Number(item.pln || 0),
     0
   );
 
@@ -169,25 +213,30 @@ export default function Home() {
         };
       }
 
-      acc[expense.paidBy].amount += Number(expense.amount);
-      acc[expense.paidBy].pln += convertToPln(expense.amount, expense.currency);
+      acc[expense.paidBy].amount += getExpenseConvertedAmount(expense);
+      acc[expense.paidBy].pln += convertToPln(
+        getExpenseOriginalAmount(expense),
+        getExpenseOriginalCurrency(expense)
+      );
 
       return acc;
     }, {})
   ).sort((a, b) => b.amount - a.amount);
 
-  const maxSpent = Math.max(...spendingStats.map((person) => person.amount), 1);
+  const maxSpent = Math.max(
+    ...spendingStats.map((person) => Number(person.amount || 0)),
+    1
+  );
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
   const weatherUrl = `https://www.google.com/search?q=pogoda+${location.city}`;
-  const user = getCurrentUser();
 
   return (
     <Layout>
       <main className="content home-content">
         <PageTitle
-           title={`Witaj, ${user?.name || "Użytkowniku"}!`}
-           subtitle="Jaką planujemy dzisiaj podróż?"
+          title={`Witaj, ${user?.name || "Użytkowniku"}!`}
+          subtitle="Jaką planujemy dzisiaj podróż?"
         />
 
         <section className="home-top-grid">
@@ -323,32 +372,42 @@ export default function Home() {
 
         <section className="home-section">
           <div className="section-header">
-            <h3>Ostatnie wydatki</h3>
+            <h3>Najnowsze wydatki</h3>
 
-            <Link to="/trip/1/expenses" className="small-blue-btn">
+            <Link to={`/trip/${firstTripId}/expenses`} className="small-blue-btn">
               + Dodaj wydatek
             </Link>
           </div>
 
           <div className="home-expenses-grid">
+            {latestExpenses.length === 0 && (
+              <Card className="home-expense-card">
+                <p>Brak wydatków do wyświetlenia.</p>
+              </Card>
+            )}
+
             {latestExpenses.map((expense) => (
               <Card className="home-expense-card" key={expense.id}>
                 <div className="expense-mini-header">
                   <div className="avatar">{getPersonAvatar(expense.paidBy)}</div>
 
                   <div>
-                    <strong>{expense.category}</strong>
-                    <p>{expense.date}</p>
+                    <strong>{getExpenseName(expense)}</strong>
+                    <p>{getExpenseDate(expense)}</p>
                   </div>
                 </div>
 
                 <p>Zapłacił: {expense.paidBy}</p>
 
                 <h2>
-                  {expense.amount} {expense.currency}
+                  {formatMoney(getExpenseOriginalAmount(expense))} {" "}
+                  {getExpenseOriginalCurrency(expense)}
                 </h2>
 
-                <span>≈ {convertToPln(expense.amount, expense.currency)} PLN</span>
+                <span>
+                  ≈ {formatMoney(getExpenseConvertedAmount(expense))} {" "}
+                  {getExpenseBaseCurrency(expense)}
+                </span>
 
                 <Link
                   to={`/trip/${expense.tripId}/expenses`}
@@ -381,9 +440,9 @@ export default function Home() {
 
                   <div className="user-trip-expense-amount">
                     <strong>
-                      {item.amount} {item.currency}
+                      {formatMoney(item.amount)} {item.currency}
                     </strong>
-                    <span>≈ {item.pln} PLN</span>
+                    <span>≈ {formatMoney(item.pln)} PLN</span>
                   </div>
                 </div>
               ))}
@@ -401,8 +460,8 @@ export default function Home() {
                 <strong>Łącznie</strong>
 
                 <div>
-                  <strong>{totalUserExpenses} EUR</strong>
-                  <span>≈ {totalUserExpensesPln} PLN</span>
+                  <strong>{formatMoney(totalUserExpenses)} EUR</strong>
+                  <span>≈ {formatMoney(totalUserExpensesPln)} PLN</span>
                 </div>
               </div>
 
@@ -432,12 +491,14 @@ export default function Home() {
                 <p>Łącznie ze wszystkich wspólnych podróży</p>
               </div>
 
-              <Link to="/trip/1/reports" className="stats-open-link">
+              <Link to={`/trip/${firstTripId}/reports`} className="stats-open-link">
                 ↗
               </Link>
             </div>
 
             <div className="spending-ranking">
+              {spendingStats.length === 0 && <p>Brak danych wydatków.</p>}
+
               {spendingStats.map((person, index) => (
                 <div
                   className={`spending-ranking-row ${
@@ -456,13 +517,12 @@ export default function Home() {
 
                     <div>
                       <strong>{person.name}</strong>
-
                       {index === 0 && <p>👑 Najwięcej wydał</p>}
                     </div>
                   </div>
 
                   <div className="ranking-amount">
-                    <strong>{person.amount} €</strong>
+                    <strong>{formatMoney(person.amount)} €</strong>
 
                     {index !== 0 && (
                       <div className="ranking-progress">
