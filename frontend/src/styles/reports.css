@@ -1,0 +1,257 @@
+.reports-page {
+  max-width: 1180px;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.report-card {
+  border-radius: 14px;
+  text-align: left;
+}
+
+.report-wide-card {
+  grid-column: 1 / -1;
+}
+
+.report-card h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #123d6b;
+  text-align: left;
+}
+
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  color: #123d6b;
+}
+
+.report-card-header p,
+.report-note {
+  margin: 4px 0 0;
+  color: #5f6b7a;
+  font-size: 14px;
+}
+
+.report-card-header > strong {
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.category-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.category-chart-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-chart-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #123d6b;
+}
+
+.category-chart-top div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.report-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.category-chart-bar,
+.budget-report-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: #e5e9ed;
+  overflow: hidden;
+}
+
+.category-chart-fill,
+.budget-report-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #8cc63f;
+}
+
+.budget-report-fill-over {
+  background: #c0392b;
+}
+
+.report-dot-1,
+.report-fill-1 {
+  background: #8cc63f;
+}
+
+.report-dot-2,
+.report-fill-2 {
+  background: #5fa8d3;
+}
+
+.report-dot-3,
+.report-fill-3 {
+  background: #f2b84b;
+}
+
+.report-dot-4,
+.report-fill-4 {
+  background: #d96c75;
+}
+
+.report-dot-5,
+.report-fill-5 {
+  background: #8e7cc3;
+}
+
+.report-dot-6,
+.report-fill-6,
+.report-dot-7,
+.report-fill-7,
+.report-dot-8,
+.report-fill-8 {
+  background: #9aa3ad;
+}
+
+.budget-report-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.budget-report-summary div,
+.report-stats-grid div {
+  background: #eef3f7;
+  border-radius: 12px;
+  padding: 14px;
+  color: #123d6b;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.budget-report-summary span,
+.report-stats-grid span {
+  color: #5f6b7a;
+  font-size: 14px;
+}
+
+.participant-balance-list,
+.settlement-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.participant-balance-list li,
+.settlement-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e3e7ec;
+  padding-bottom: 12px;
+  color: #123d6b;
+}
+
+.participant-balance-list li div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.participant-balance-list span {
+  color: #5f6b7a;
+  font-size: 14px;
+}
+
+.report-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.report-expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-expense-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  color: #123d6b;
+  border-bottom: 1px solid #e3e7ec;
+  padding-bottom: 14px;
+  text-align: left;
+}
+
+.report-expense-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.report-expense-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-expense-row > div:first-child {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.report-expense-row > div:last-child {
+  align-items: flex-end;
+  text-align: right;
+  min-width: 150px;
+}
+
+.report-expense-row span {
+  color: #5f6b7a;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-report-summary,
+  .report-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .report-expense-row {
+    flex-direction: column;
+  }
+
+  .report-expense-row > div:last-child {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
