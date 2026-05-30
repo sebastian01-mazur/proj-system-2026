@@ -6,7 +6,7 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageTitle from "../components/ui/PageTitle";
 
-import { createTrip } from "../services/tripService";
+import { createTrip } from "../services/tripApiService.js";
 
 export default function NewTrip() {
     const navigate = useNavigate();

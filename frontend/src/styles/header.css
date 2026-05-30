@@ -1,0 +1,50 @@
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.header-logo-icon {
+  height: 52px;
+  width: auto;
+  display: block;
+}
+
+.header-logo-text {
+  height: 42px;
+  width: auto;
+  display: block;
+}
+
+.header-icon-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+.profile-header-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0b376d;
+  font-weight: bold;
+}
+
+.profile-header-link img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-header-link span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef1ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
