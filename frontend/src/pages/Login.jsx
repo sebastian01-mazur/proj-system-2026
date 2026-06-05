@@ -20,7 +20,7 @@ export default function Login() {
             await login(email, password);
             navigate("/home");
         } catch (err) {
-            setError("Dane logowania są niepoprawne.");
+            setError("Dane logowania sa niepoprawne.");
         }
     }
 

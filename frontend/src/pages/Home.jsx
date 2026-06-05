@@ -38,7 +38,7 @@ export default function Home() {
           getOrganizerTrips(userId),
         ]);
 
-        console.log("Dashboard API:", dashboard);
+        console.log("Dashboardd API:", dashboard);
         console.log("Organizer trips API:", trips);
 
         setDashboardData(dashboard);
