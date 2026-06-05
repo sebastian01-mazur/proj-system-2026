@@ -22,7 +22,7 @@ export default function Home() {
   const [expandedTrips, setExpandedTrips] = useState(false);
 
   const user = getCurrentUser();
-  const userId = user?.id || DEFAULT_USER_ID;
+  const userId = DEFAULT_USER_ID;
 
   const location = {
     city: "Warszawa",
