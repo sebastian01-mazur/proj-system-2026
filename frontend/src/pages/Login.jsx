@@ -38,8 +38,26 @@ export default function Login() {
 
                 <h2>Zaloguj się</h2>
 
-                <button className="oauth-btn"><img src={googleIcon} alt="Google" className="oauth-google"/> Kontynuuj z Google</button>
-                <button className="oauth-btn"><img src={facebookIcon} alt="Facebook" className="oauth-fb"/> Kontynuuj z Facebook</button>
+                <button
+                    type="button"
+                    className="oauth-btn"
+                    onClick={() => {
+                        window.location.href = "http://130.162.56.186:8001/oauth2/authorization/google";
+                    }}
+                >
+                    <img src={googleIcon} alt="Google" className="oauth-google" />
+                    Kontynuuj z Google
+                </button>
+                <button
+                    type="button"
+                    className="oauth-btn"
+                    onClick={() => {
+                        window.location.href = "http://130.162.56.186:8001/oauth2/authorization/facebook";
+                    }}
+                >
+                    <img src={facebookIcon} alt="Facebook" className="oauth-fb" />
+                    Kontynuuj z Facebook
+                </button>
 
                 <div className="auth-separator">Lub</div>
 

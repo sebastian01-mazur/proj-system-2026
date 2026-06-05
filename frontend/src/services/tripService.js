@@ -44,7 +44,7 @@ export function normalizeExpense(expense) {
   const baseCurrency = expense.baseCurrency || expense.currency || originalCurrency || "PLN";
   const exchangeRate = Number(expense.exchangeRate || 1);
   const convertedAmount = Number(
-    expense.convertedAmount ?? Number((originalAmount * exchangeRate).toFixed(2))
+      expense.convertedAmount ?? Number((originalAmount * exchangeRate).toFixed(2))
   );
 
   return {
@@ -98,7 +98,7 @@ export async function getAllExpenses() {
 
 export async function getTripExpenses(tripId) {
   return getStoredExpenses().filter(
-    (expense) => Number(expense.tripId) === Number(tripId)
+      (expense) => Number(expense.tripId) === Number(tripId)
   );
 }
 
@@ -119,22 +119,22 @@ export async function updateExpense(expenseId, updatedExpenseData) {
   const currentExpenses = getStoredExpenses();
 
   const updatedExpenses = currentExpenses.map((expense) =>
-    Number(expense.id) === Number(expenseId)
-      ? normalizeExpense({ ...expense, ...updatedExpenseData, id: expense.id })
-      : expense
+      Number(expense.id) === Number(expenseId)
+          ? normalizeExpense({ ...expense, ...updatedExpenseData, id: expense.id })
+          : expense
   );
 
   saveToStorage(EXPENSES_KEY, updatedExpenses);
 
   return updatedExpenses.find(
-    (expense) => Number(expense.id) === Number(expenseId)
+      (expense) => Number(expense.id) === Number(expenseId)
   );
 }
 
 export async function deleteExpense(expenseId) {
   const currentExpenses = getStoredExpenses();
   const updatedExpenses = currentExpenses.filter(
-    (expense) => Number(expense.id) !== Number(expenseId)
+      (expense) => Number(expense.id) !== Number(expenseId)
   );
 
   saveToStorage(EXPENSES_KEY, updatedExpenses);
@@ -147,7 +147,7 @@ export async function getInvitations() {
 export async function acceptInvitation(id) {
   const currentInvitations = getStoredInvitations();
   const acceptedInvitation = currentInvitations.find(
-    (invitation) => Number(invitation.id) === Number(id)
+      (invitation) => Number(invitation.id) === Number(id)
   );
 
   if (!acceptedInvitation) {
@@ -155,7 +155,7 @@ export async function acceptInvitation(id) {
   }
 
   const updatedInvitations = currentInvitations.filter(
-    (invitation) => Number(invitation.id) !== Number(id)
+      (invitation) => Number(invitation.id) !== Number(id)
   );
 
   saveToStorage(INVITATIONS_KEY, updatedInvitations);
@@ -163,7 +163,7 @@ export async function acceptInvitation(id) {
   if (acceptedInvitation.type === "friend") {
     const currentFriends = getFromStorage(FRIENDS_KEY, []);
     const friendAlreadyExists = currentFriends.some(
-      (friend) => friend.name === acceptedInvitation.user
+        (friend) => friend.name === acceptedInvitation.user
     );
 
     if (!friendAlreadyExists) {
@@ -183,7 +183,7 @@ export async function acceptInvitation(id) {
 export async function rejectInvitation(id) {
   const currentInvitations = getStoredInvitations();
   const updatedInvitations = currentInvitations.filter(
-    (invitation) => Number(invitation.id) !== Number(id)
+      (invitation) => Number(invitation.id) !== Number(id)
   );
 
   saveToStorage(INVITATIONS_KEY, updatedInvitations);

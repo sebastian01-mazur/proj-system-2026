@@ -39,7 +39,7 @@ export default function Invitations() {
     await acceptInvitation(id);
 
     setInvitations((previousInvitations) =>
-      previousInvitations.filter((invitation) => invitation.id !== id)
+        previousInvitations.filter((invitation) => invitation.id !== id)
     );
   }
 
@@ -47,7 +47,7 @@ export default function Invitations() {
     await rejectInvitation(id);
 
     setInvitations((previousInvitations) =>
-      previousInvitations.filter((invitation) => invitation.id !== id)
+        previousInvitations.filter((invitation) => invitation.id !== id)
     );
   }
 
@@ -87,109 +87,109 @@ export default function Invitations() {
   }
 
   return (
-    <Layout>
-      <main className="content">
-        <PageTitle
-          title="Zaproszenia od znajomych"
-          subtitle="Dołącz do wspólnej podróży!"
-        />
-
-        {loading && <p>Ładowanie zaproszeń...</p>}
-
-        {!loading && invitations.length === 0 && (
-          <Card>
-            <h3>Brak zaproszeń</h3>
-            <p>Żaden użytkownik nie zaprosił Cię do podróży ani znajomych.</p>
-          </Card>
-        )}
-
-        {!loading &&
-          invitations.map((invitation) => (
-            <Card className="invite-card" key={invitation.id}>
-              <div className="invite-left">
-                <div className="invite-avatar">
-                  {invitation.avatar ? (
-                    <img src={invitation.avatar} alt={invitation.user} />
-                  ) : (
-                    <span>👤</span>
-                  )}
-                </div>
-
-                <div>
-                  <strong>{invitation.user}</strong>
-
-                  {invitation.type === "trip" ? (
-                    <>
-                      <h3>{invitation.trip}</h3>
-                      <p>🇳🇱 {invitation.country}</p>
-                      <p>🗓️ Termin: {invitation.date}</p>
-                    </>
-                  ) : (
-                    <h3>Zaproszenie do znajomych</h3>
-                  )}
-                </div>
-              </div>
-
-              <div className="invite-buttons">
-                <Button onClick={() => handleAccept(invitation.id)}>
-                  Akceptuj
-                </Button>
-
-                <Button
-                  variant="blue"
-                  onClick={() => handleReject(invitation.id)}
-                >
-                  Odrzuć
-                </Button>
-              </div>
-            </Card>
-          ))}
-
-        <section className="send-invite-section">
+      <Layout>
+        <main className="content">
           <PageTitle
-            title="Zaproś swoich znajomych"
-            subtitle="Stwórzcie razem przygodę!"
+              title="Zaproszenia od znajomych"
+              subtitle="Dołącz do wspólnej podróży!"
           />
 
-          <form className="invite-form" onSubmit={handleSendTripInvitation}>
-            <label>
-              Email
-              <div className="friend-input-row">
-                <input
-                  type="email"
-                  placeholder="piotr.wisniewski@wp.pl"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                />
+          {loading && <p>Ładowanie zaproszeń...</p>}
 
-                <button type="button" onClick={handleAddFriend}>
-                  Dodaj znajomego
-                </button>
-              </div>
-            </label>
+          {!loading && invitations.length === 0 && (
+              <Card>
+                <h3>Brak zaproszeń</h3>
+                <p>Żaden użytkownik nie zaprosił Cię do podróży ani znajomych.</p>
+              </Card>
+          )}
 
-            <label>
-              Wybierz podróż
-              <select
-                value={selectedTripId}
-                onChange={(event) => setSelectedTripId(event.target.value)}
-              >
-                <option value="">Wybierz podróż</option>
+          {!loading &&
+              invitations.map((invitation) => (
+                  <Card className="invite-card" key={invitation.id}>
+                    <div className="invite-left">
+                      <div className="invite-avatar">
+                        {invitation.avatar ? (
+                            <img src={invitation.avatar} alt={invitation.user} />
+                        ) : (
+                            <span>👤</span>
+                        )}
+                      </div>
 
-                {trips.map((trip) => (
-                  <option key={trip.id} value={trip.id}>
-                    {trip.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                      <div>
+                        <strong>{invitation.user}</strong>
 
-            <Button type="submit" variant="blue" className="send-trip-btn">
-              + Wyślij zaproszenie
-            </Button>
-          </form>
-        </section>
-      </main>
-    </Layout>
+                        {invitation.type === "trip" ? (
+                            <>
+                              <h3>{invitation.trip}</h3>
+                              <p>🇳🇱 {invitation.country}</p>
+                              <p>🗓️ Termin: {invitation.date}</p>
+                            </>
+                        ) : (
+                            <h3>Zaproszenie do znajomych</h3>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="invite-buttons">
+                      <Button onClick={() => handleAccept(invitation.id)}>
+                        Akceptuj
+                      </Button>
+
+                      <Button
+                          variant="blue"
+                          onClick={() => handleReject(invitation.id)}
+                      >
+                        Odrzuć
+                      </Button>
+                    </div>
+                  </Card>
+              ))}
+
+          <section className="send-invite-section">
+            <PageTitle
+                title="Zaproś swoich znajomych"
+                subtitle="Stwórzcie razem przygodę!"
+            />
+
+            <form className="invite-form" onSubmit={handleSendTripInvitation}>
+              <label>
+                Email
+                <div className="friend-input-row">
+                  <input
+                      type="email"
+                      placeholder="piotr.wisniewski@wp.pl"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                  />
+
+                  <button type="button" onClick={handleAddFriend}>
+                    Dodaj znajomego
+                  </button>
+                </div>
+              </label>
+
+              <label>
+                Wybierz podróż
+                <select
+                    value={selectedTripId}
+                    onChange={(event) => setSelectedTripId(event.target.value)}
+                >
+                  <option value="">Wybierz podróż</option>
+
+                  {trips.map((trip) => (
+                      <option key={trip.id} value={trip.id}>
+                        {trip.name}
+                      </option>
+                  ))}
+                </select>
+              </label>
+
+              <Button type="submit" variant="blue" className="send-trip-btn">
+                + Wyślij zaproszenie
+              </Button>
+            </form>
+          </section>
+        </main>
+      </Layout>
   );
 }

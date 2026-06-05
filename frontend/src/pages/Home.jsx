@@ -8,6 +8,7 @@ import Card from "../components/ui/Card";
 import { getCurrentUser } from "../services/authService";
 import { getDashboardData } from "../services/dashboardService";
 import { getOrganizerTrips } from "../services/tripApiService";
+import { DEFAULT_USER_ID } from "../services/apiConfig";
 
 export default function Home() {
   const [dashboardData, setDashboardData] = useState(null);
@@ -21,7 +22,7 @@ export default function Home() {
   const [expandedTrips, setExpandedTrips] = useState(false);
 
   const user = getCurrentUser();
-  const TEST_USER_ID = "66666666-6666-6666-6666-666666666666";
+  const userId = user?.id || DEFAULT_USER_ID;
 
   const location = {
     city: "Warszawa",
@@ -33,8 +34,8 @@ export default function Home() {
     async function loadHomeData() {
       try {
         const [dashboard, trips] = await Promise.all([
-          getDashboardData(TEST_USER_ID),
-          getOrganizerTrips(TEST_USER_ID),
+          getDashboardData(userId),
+          getOrganizerTrips(userId),
         ]);
 
         console.log("Dashboard API:", dashboard);
@@ -50,7 +51,7 @@ export default function Home() {
     }
 
     loadHomeData();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     async function loadWeather() {
@@ -463,7 +464,7 @@ export default function Home() {
 
                 <div>
                   <h4>Podsumowanie budżetu</h4>
-                  <p>Dane pobrane z Dashboard API i Trip API</p>
+                  <p></p>
                 </div>
 
                 <Link to="/trip/1/reports" className="stats-open-link">

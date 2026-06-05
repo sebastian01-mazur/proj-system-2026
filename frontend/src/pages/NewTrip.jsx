@@ -18,7 +18,6 @@ export default function NewTrip() {
     const [budget, setBudget] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [imagePreview, setImagePreview] = useState("");
     const [dateError, setDateError] = useState("");
 
     function validateDates(start, end) {
@@ -29,14 +28,6 @@ export default function NewTrip() {
         }
 
         return "";
-    }
-
-    function handleImageChange(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const previewUrl = URL.createObjectURL(file);
-        setImagePreview(previewUrl);
     }
 
     async function handleSubmit(event) {
@@ -58,12 +49,9 @@ export default function NewTrip() {
             startDate,
             endDate,
             date: `${startDate} — ${endDate}`,
-            image:
-                imagePreview ||
-                "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1200&q=80",
         });
 
-        alert(`Utworzono podróż: ${newTrip.name}`);
+        alert(`Utworzono podróż: ${newTrip.name || newTrip.country}`);
         navigate("/home");
     }
 
@@ -135,9 +123,7 @@ export default function NewTrip() {
                             required
                         />
 
-                        {dateError && (
-                            <p className="form-error">{dateError}</p>
-                        )}
+                        {dateError && <p className="form-error">{dateError}</p>}
 
                         <label>Waluta bazowa</label>
                         <select
@@ -160,21 +146,6 @@ export default function NewTrip() {
                             placeholder="1500"
                             required
                         />
-
-                        <label>Zdjęcie podróży</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                        />
-
-                        {imagePreview && (
-                            <img
-                                src={imagePreview}
-                                alt="Podgląd zdjęcia podróży"
-                                className="trip-image-preview"
-                            />
-                        )}
 
                         <Button type="submit">Utwórz podróż</Button>
                     </form>

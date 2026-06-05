@@ -18,6 +18,12 @@ function HomeMock() {
 }
 
 export default function App() {
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    if (token) {
+        localStorage.setItem("token", token);
+        window.history.replaceState({}, document.title, "/");
+    }
     return (
         <BrowserRouter>
             <Routes>

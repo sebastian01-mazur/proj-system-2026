@@ -1,88 +1,166 @@
-const API_URL = "http://localhost:8080/api";
+import { apiRequest, DEFAULT_USER_ID } from "./apiConfig";
+import { getCurrentUser } from "./authService";
+
+function getOrganizerId(explicitOrganizerId) {
+  return explicitOrganizerId || getCurrentUser()?.id || DEFAULT_USER_ID;
+}
+
+function normalizeStatus(status = "PLANNED") {
+  const statuses = {
+    PLANNED: "Planowane",
+    IN_PROGRESS: "W trakcie",
+    COMPLETED: "Zakończone",
+    ACTIVE: "W trakcie",
+    FINISHED: "Zakończone",
+  };
+
+  return statuses[status] || status || "Planowane";
+}
+
+function normalizeMember(member) {
+  if (typeof member === "string") {
+    return member;
+  }
+
+  return (
+      member?.name ||
+      member?.fullName ||
+      member?.userName ||
+      member?.email ||
+      member?.user?.name ||
+      member?.user?.email ||
+      "Uczestnik"
+  );
+}
+
+function normalizeTrip(trip, members = []) {
+  if (!trip) {
+    return null;
+  }
+
+  const participants =
+      trip.participants ||
+      trip.members ||
+      trip.tripMembers ||
+      members ||
+      [];
+
+  return {
+    ...trip,
+    id: trip.id || trip.tripId,
+    name: trip.name || trip.tripName || trip.country || "Podróż",
+    country: trip.country || trip.destinationCountry || "Brak kraju",
+    city: trip.city || "",
+    status: normalizeStatus(trip.status),
+    startDate: trip.startDate || trip.dateFrom || "",
+    endDate: trip.endDate || trip.dateTo || "",
+    budget: Number(trip.budget ?? trip.plannedBudget ?? 0),
+    plannedBudget: Number(trip.plannedBudget ?? trip.budget ?? 0),
+    currency: trip.currency || trip.baseCurrency || "EUR",
+    baseCurrency: trip.baseCurrency || trip.currency || "EUR",
+    participants: participants.map(normalizeMember),
+    image:
+        trip.image ||
+        trip.imageUrl ||
+        "https://images.unsplash.com/photo-1502602898657-3e91760cbb34",
+  };
+}
+
+function normalizeExpense(expense) {
+  const originalAmount = Number(expense.originalAmount ?? expense.amount ?? 0);
+  const convertedAmount = Number(
+      expense.convertedAmount ?? expense.amountInBaseCurrency ?? expense.amount ?? 0
+  );
+
+  return {
+    ...expense,
+    id: expense.id || expense.expenseId,
+    tripId: expense.tripId,
+    name: expense.name || expense.title || expense.category || "Wydatek",
+    category: expense.category || "Inne",
+    date: expense.date || expense.expenseDate || "",
+    expenseDate: expense.expenseDate || expense.date || "",
+    paidBy: expense.paidBy || expense.payerName || "Użytkownik",
+    amount: originalAmount,
+    originalAmount,
+    currency: expense.currency || expense.originalCurrency || "EUR",
+    originalCurrency: expense.originalCurrency || expense.currency || "EUR",
+    convertedAmount,
+    baseCurrency: expense.baseCurrency || expense.currency || "EUR",
+    split: expense.split || [],
+  };
+}
 
 export async function createTrip(tripData) {
-  const response = await fetch(`${API_URL}/trips`, {
+  const createdTrip = await apiRequest("/trips", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
     body: JSON.stringify({
-      name: tripData.name,
+      organizerId: getOrganizerId(tripData.organizerId),
       country: tripData.country,
-      city: tripData.city,
-      baseCurrency: tripData.currency,
-      plannedBudget: tripData.budget,
       startDate: tripData.startDate,
       endDate: tripData.endDate,
-      imageUrl: tripData.image,
+      baseCurrency: tripData.currency || tripData.baseCurrency,
+      plannedBudget: Number(tripData.budget ?? tripData.plannedBudget ?? 0),
     }),
   });
 
-  if (!response.ok) {
-    throw new Error("Nie udało się utworzyć podróży.");
-  }
-
-  return response.json();
+  return normalizeTrip(createdTrip || tripData);
 }
 
 export async function getOrganizerTrips(organizerId) {
-  const response = await fetch(`${API_URL}/trips/organizer/${organizerId}`, {
+  const trips = await apiRequest(`/trips/organizer/${getOrganizerId(organizerId)}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
   });
 
-  if (!response.ok) {
-    throw new Error("Nie udało się pobrać podróży organizatora.");
-  }
-
-  return response.json();
+  return Array.isArray(trips) ? trips.map((trip) => normalizeTrip(trip)) : [];
 }
 
-export async function getInvitations() {
-  return [
-    {
-      id: 1,
-      type: "friend",
-      user: "Jan Kowalski",
-    },
-    {
-      id: 2,
-      type: "trip",
-      user: "Anna Nowak",
-      trip: "Weekend w Paryżu",
-    },
-  ];
+export async function getTripMembers(tripId) {
+  const members = await apiRequest(`/trips/${tripId}/members`, {
+    method: "GET",
+  });
+
+  return Array.isArray(members) ? members.map(normalizeMember) : [];
 }
 
 export async function getTripById(tripId) {
-  const response = await fetch(`${API_URL}/trips/${tripId}`, {
+  const trip = await apiRequest(`/trips/${tripId}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
   });
 
-  if (!response.ok) {
-    throw new Error("Nie udało się pobrać szczegółów podróży.");
+  let members = [];
+
+  try {
+    members = await getTripMembers(tripId);
+  } catch (error) {
+    console.warn("Nie udało się pobrać uczestników podróży:", error);
   }
 
-  return response.json();
+  return normalizeTrip(trip, members);
+}
+
+export async function updateTripStatus(tripId, status) {
+  const updatedTrip = await apiRequest(`/trips/${tripId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+
+  return normalizeTrip(updatedTrip);
 }
 
 export async function getTripExpenses(tripId) {
-  const response = await fetch(`${API_URL}/trips/${tripId}/expenses`, {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  });
+  try {
+    const expenses = await apiRequest(`/expenses/trips/${tripId}`, {
+      method: "GET",
+    });
 
-  if (!response.ok) {
-    throw new Error("Nie udało się pobrać wydatków podróży.");
+    return Array.isArray(expenses) ? expenses.map(normalizeExpense) : [];
+  } catch (error) {
+    console.warn("Endpoint wydatków nie jest dostępny lub zwrócił błąd:", error);
+    return [];
   }
+}
 
-  return response.json();
+export async function getInvitations() {
+  return [];
 }

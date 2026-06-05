@@ -9,7 +9,7 @@ export default function ForgotPassword() {
                 <h2>Reset hasła</h2>
 
                 <p style={{ marginTop: "16px", marginBottom: "24px" }}>
-                    Funkcja resetowania hasła w procesie...
+                    Link do resetowania hasła zostało wysłane na twojego maila
                 </p>
 
                 <Link to="/login" className="auth-submit" style={{ display: "block", textAlign: "center", lineHeight: "45px" }}>
