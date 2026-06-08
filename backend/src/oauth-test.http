@@ -3,9 +3,9 @@ POST http://localhost:8001/auth/register
 Content-Type: application/json
 
 {
-  "name":"Jan",
-  "email":"jan@test.pl",
-  "password":"Password123"
+  "name": "Jan Kowalski",
+  "email": "jan.kowalski@test.pl",
+  "password": "Password123"
 }
 
 ###
@@ -15,7 +15,7 @@ POST http://localhost:8001/auth/login
 Content-Type: application/json
 
 {
-  "email":"jan@test.pl",
+  "email":"jan.kowalski@test.pl",
   "password":"Password123"
 }
 
@@ -28,7 +28,7 @@ GET http://localhost:8001/test/secure
 
 ### Test endpointu zabezpieczonego z tokenem
 GET http://localhost:8001/test/secure
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW5AdGVzdC5wbCIsImlhdCI6MTc4MDkwNjY3MCwiZXhwIjoxNzgwOTkzMDcwfQ.VJhNw2sS99JZ0fBRrEwNB8YdTK2IOiYDgxnVoS5iOkI
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW4ua293YWxza2lAdGVzdC5wbCIsImlhdCI6MTc4MDkxNTcxMiwiZXhwIjoxNzgxMDAyMTEyfQ.uHYtxNSYqCXW2wH3TOky1n48qCasm7mQxZNegsNXT6Q
 
 ### Słabe hasło
 POST http://localhost:8001/auth/register

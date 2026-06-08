@@ -33,11 +33,20 @@ public class AuthService {
             throw new UserAlreadyExistsException(request.getEmail());
         }
 
+        String[] parts = request.getName()
+                .trim()
+                .split("\\s+", 2);
+
+        String firstName = parts[0];
+        String lastName = parts.length > 1 ? parts[1] : "-";
+
         User user = User.builder()
-                .name(request.getName())
+                .firstName(firstName)
+                .lastName(lastName)
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .provider("local")
+                .providerId("local-" + java.util.UUID.randomUUID())
                 .build();
 
         userRepository.save(user);

@@ -33,14 +33,28 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
         String providerId = oauthUser.getName();
+        String provider =
+                authentication.getAuthorities()
+                        .stream()
+                        .findFirst()
+                        .map(a -> a.getAuthority())
+                        .orElse("google");
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
 
+                    String[] parts = name != null
+                            ? name.trim().split("\\s+", 2)
+                            : new String[0];
+
+                    String firstName = parts.length > 0 ? parts[0] : "OAuth";
+                    String lastName = parts.length > 1 ? parts[1] : "User";
+
                     User newUser = User.builder()
                             .email(email)
-                            .name(name)
-                            .provider("google")
+                            .firstName(firstName)
+                            .lastName(lastName)
+                            .provider(provider)
                             .providerId(providerId)
                             .build();
 
