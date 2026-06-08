@@ -83,8 +83,26 @@ export default function Register() {
 
                 {error && <div className="auth-error">{error}</div>}
 
-                <button className="oauth-btn"><img src={googleIcon} alt="Google" className="oauth-google"/> Kontynuuj z Google</button>
-                <button className="oauth-btn"><img src={facebookIcon} alt="Facebook" className="oauth-fb"/> Kontynuuj z Facebook</button>
+                <button
+                    type="button"
+                    className="oauth-btn"
+                    onClick={() => {
+                        window.location.href = "http://localhost:8080/oauth2/authorization/google";
+                    }}
+                >
+                    <img src={googleIcon} alt="Google" className="oauth-google" />
+                    Kontynuuj z Google
+                </button>
+                <button
+                    type="button"
+                    className="oauth-btn"
+                    onClick={() => {
+                        window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
+                    }}
+                >
+                    <img src={facebookIcon} alt="Facebook" className="oauth-fb" />
+                    Kontynuuj z Facebook
+                </button>
 
                 <div className="auth-separator">Lub</div>
 

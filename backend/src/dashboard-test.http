@@ -3,5 +3,5 @@
 ---
 
 ### TEST 1: Pobranie danych do Dashboardu dla użytkownika
-GET http://localhost:8080/api/dashboard/{{userId}}
+GET http://130.162.56.186:8001/api/dashboard/{{userId}}
 Accept: application/json

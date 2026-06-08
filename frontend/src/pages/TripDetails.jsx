@@ -5,7 +5,7 @@ import Header from "../components/Header";
 import BottomNav from "../components/BottomNav";
 import Button from "../components/ui/Button";
 
-import { getTripById, getTripExpenses } from "../services/tripService";
+import { getTripById, getTripExpenses } from "../services/tripApiService.js";
 
 export default function TripDetails() {
     const { id } = useParams();
@@ -52,19 +52,22 @@ export default function TripDetails() {
         );
     }
 
+    const participants = trip.participants || [];
+    const budget = Number(trip.budget || trip.plannedBudget || 0);
+
     const totalExpenses = tripExpenses.reduce(
-        (sum, expense) => sum + Number(expense.amount),
+        (sum, expense) => sum + Number(expense.convertedAmount ?? expense.amount ?? 0),
         0
     );
 
-    const remainingBudget = Number(trip.budget) - totalExpenses;
-    const budgetUsage = Math.round((totalExpenses / Number(trip.budget)) * 100);
+    const remainingBudget = budget - totalExpenses;
+    const budgetUsage = budget > 0 ? Math.round((totalExpenses / budget) * 100) : 0;
 
-    const visibleParticipants = trip.participants.slice(0, 4);
+    const visibleParticipants = participants.slice(0, 4);
     const visibleExpenses = tripExpenses.slice(0, 3);
 
     const hiddenParticipantsCount =
-        trip.participants.length - visibleParticipants.length;
+        participants.length - visibleParticipants.length;
 
     const hiddenExpensesCount =
         tripExpenses.length - visibleExpenses.length;
@@ -86,7 +89,7 @@ export default function TripDetails() {
                         <h1>{trip.name}</h1>
                         <p>🇫🇷 {trip.country}</p>
                         <p>📅 Termin: {trip.startDate} - {trip.endDate}</p>
-                        <p>👥 Ilość uczestników: {trip.participants.length}</p>
+                        <p>👥 Ilość uczestników: {participants.length}</p>
                         <p>💲 Budżet: {trip.budget} {trip.currency}</p>
                     </div>
                 </section>
@@ -164,7 +167,7 @@ export default function TripDetails() {
                                     {expense.amount} {expense.currency}
                                 </h2>
 
-                                <span>≈ {expense.amount * 4} PLN</span>
+                                <span>≈ {Number(expense.convertedAmount ?? expense.amount ?? 0)} PLN</span>
                             </div>
                         ))}
 
@@ -214,7 +217,7 @@ export default function TripDetails() {
 
                         <div className="stat-box">
                             <span>Uczestnicy</span>
-                            <strong>{trip.participants.length}</strong>
+                            <strong>{participants.length}</strong>
                         </div>
 
                         <div className="stat-box">

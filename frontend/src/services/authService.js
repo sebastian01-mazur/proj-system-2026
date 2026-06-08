@@ -1,5 +1,5 @@
 const MOCK_USER = {
-    id: 1,
+    id: "66666666-6666-6666-6666-666666666666",
     name: "Jan Kowalski",
     email: "jan@test.pl",
 };
@@ -24,7 +24,7 @@ export async function register(userData) {
     const fakeToken = "mock-jwt-token";
 
     const user = {
-        id: Date.now(),
+        id: "66666666-6666-6666-6666-666666666666",
         name: `${userData.name} ${userData.surname}`,
         email: userData.email,
     };

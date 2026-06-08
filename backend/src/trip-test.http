@@ -5,7 +5,7 @@
 
 ### TEST 1: Utworzenie nowej wycieczki
 
-POST http://localhost:8080/api/trips
+POST http://130.162.56.186:8001/api/trips
 Content-Type: application/json
 
 {
@@ -20,25 +20,25 @@ Content-Type: application/json
 ###
 
 ### TEST 2: Pobranie szczegółów wycieczki po ID
-GET http://localhost:8080/api/trips/{{tripId}}
+GET http://130.162.56.186:8001/api/trips/{{tripId}}
 Accept: application/json
 
 ###
 
 ### TEST 3: Pobranie wszystkich wycieczek danego organizatora
-GET http://localhost:8080/api/trips/organizer/{{organizerId}}
+GET http://130.162.56.186:8001/api/trips/organizer/{{organizerId}}
 Accept: application/json
 
 ###
 
 ### TEST 4: Pobranie uczestników wycieczki
-GET http://localhost:8080/api/trips/{{tripId}}/members
+GET http://130.162.56.186:8001/api/trips/{{tripId}}/members
 Accept: application/json
 
 ###
 
 ### TEST 5: Zmiana statusu wycieczki
-PATCH http://localhost:8080/api/trips/{{tripId}}/status
+PATCH http://130.162.56.186:8001/api/trips/{{tripId}}/status
 Content-Type: application/json
 
 {
