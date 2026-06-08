@@ -30,10 +30,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
 
+        String registrationId =
+                request.getRequestURI().contains("facebook")
+                        ? "facebook"
+                        : "google";
+
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
         String providerId = oauthUser.getName();
-        String provider = "google";
+        String provider = registrationId;
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
@@ -58,7 +63,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         if (user.getProvider() == null
                 || "local".equals(user.getProvider())) {
 
-            user.setProvider("google");
+            user.setProvider(provider);
             user.setProviderId(providerId);
 
             userRepository.save(user);
@@ -69,7 +74,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String token = jwtService.generateToken(user.getEmail());
 
         response.sendRedirect(
-                "http://localhost?token=" + token
+                "http://localhost:5173?token=" + token
         );
     }
 }
