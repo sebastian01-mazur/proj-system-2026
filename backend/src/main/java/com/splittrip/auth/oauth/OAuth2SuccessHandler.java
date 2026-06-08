@@ -33,12 +33,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
         String providerId = oauthUser.getName();
-        String provider =
-                authentication.getAuthorities()
-                        .stream()
-                        .findFirst()
-                        .map(a -> a.getAuthority())
-                        .orElse("google");
+        String provider = "google";
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
@@ -60,6 +55,16 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
                     return userRepository.save(newUser);
                 });
+        if (user.getProvider() == null
+                || "local".equals(user.getProvider())) {
+
+            user.setProvider("google");
+            user.setProviderId(providerId);
+
+            userRepository.save(user);
+        }
+
+
 
         String token = jwtService.generateToken(user.getEmail());
 
