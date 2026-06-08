@@ -3,9 +3,9 @@ POST http://localhost:8001/auth/register
 Content-Type: application/json
 
 {
-  "name": "Test User",
-  "email": "test@test.com",
-  "password": "123456"
+  "name":"Jan",
+  "email":"jan@test.pl",
+  "password":"Password123"
 }
 
 ###
@@ -29,3 +29,33 @@ GET http://localhost:8001/test/secure
 ### Test endpointu zabezpieczonego z tokenem
 GET http://localhost:8001/test/secure
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0QHRlc3QuY29tIiwiaWF0IjoxNzc5OTAzMzM3LCJleHAiOjE3Nzk5ODk3Mzd9.gi17LU0TROFk_88gEkQA4lqq2LrjF2LkzQVTM_QWNhM
+
+### Słabe hasło
+POST http://localhost:8001/auth/register
+Content-Type: application/json
+
+{
+  "name":"Jan",
+  "email":"abc@test.pl",
+  "password":"abc"
+}
+
+
+### Niepoprawne logowanie
+POST http://localhost:8001/auth/login
+Content-Type: application/json
+
+{
+  "email":"jan@test.pl",
+  "password":"zlehaslo"
+}
+
+
+### Poprawne logowanie
+POST http://localhost:8001/auth/login
+Content-Type: application/json
+
+{
+  "email":"jan@test.pl",
+  "password":"Password123"
+}
