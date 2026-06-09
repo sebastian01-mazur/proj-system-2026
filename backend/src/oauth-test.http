@@ -1,4 +1,4 @@
-@host = localhost
+@host = 130.162.56.186
 
 ### Rejestracja użytkownika
 POST http://{{host}}:8001/api/auth/register
@@ -46,10 +46,10 @@ Content-Type: application/json
 }
 
 ### WYLOGOWANIE
-POST {{host}}/api/auth/logout
+POST http://{{host}}:8001/api/auth/logout
 
 ### FACEBOOK OAuth
-{{host}}:8001/oauth2/authorization/facebook
+http://{{host}}:8001/oauth2/authorization/facebook
 
 ### GOOGLE OAuth
-{{host}}:8001/oauth2/authorization/google
+http://{{host}}:8001/oauth2/authorization/google
