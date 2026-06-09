@@ -1,17 +1,17 @@
+@host = localhost
+
 ### Rejestracja użytkownika
-POST http://localhost:8001/auth/register
+POST http://{{host}}:8001/api/auth/register
 Content-Type: application/json
 
 {
   "name": "Jan Kowalski",
-  "email": "jan.kowalski@test.pl",
+  "email": "jan.kowsssssalski@test.pl",
   "password": "Password123"
 }
 
-###
-
 ### Logowanie użytkownika
-POST http://localhost:8001/auth/login
+POST http://{{host}}:8001/api/auth/login
 Content-Type: application/json
 
 {
@@ -19,19 +19,15 @@ Content-Type: application/json
   "password":"Password123"
 }
 
-###
-
 ### Test endpointu zabezpieczonego bez tokena
-GET http://localhost:8001/test/secure
-
-###
+GET http://{{host}}:8001/test/secure
 
 ### Test endpointu zabezpieczonego z tokenem
-GET http://localhost:8001/test/secure
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW4ua293YWxza2lAdGVzdC5wbCIsImlhdCI6MTc4MDkxNTcxMiwiZXhwIjoxNzgxMDAyMTEyfQ.uHYtxNSYqCXW2wH3TOky1n48qCasm7mQxZNegsNXT6Q
+GET http://{{host}}:8001/test/secure
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW4ua293c3Nzc3NhbHNraUB0ZXN0LnBsIiwiaWF0IjoxNzgxMDA3NTEyLCJleHAiOjE3ODEwOTM5MTJ9.A9Z4zjQV9_Ukyu31kM1xi34kccLZOnfbQVyRBFjzkzY
 
 ### Słabe hasło
-POST http://localhost:8001/auth/register
+POST http://{{host}}:8001/api/auth/register
 Content-Type: application/json
 
 {
@@ -40,13 +36,20 @@ Content-Type: application/json
   "password":"abc"
 }
 
-###
-
 ### Niepoprawne logowanie
-POST http://localhost:8001/auth/login
+POST http://{{host}}:8001/api/auth/login
 Content-Type: application/json
 
 {
   "email":"jan@test.pl",
   "password":"zlehaslo"
 }
+
+### WYLOGOWANIE
+POST {{host}}/api/auth/logout
+
+### FACEBOOK OAuth
+{{host}}:8001/oauth2/authorization/facebook
+
+### GOOGLE OAuth
+{{host}}:8001/oauth2/authorization/google
