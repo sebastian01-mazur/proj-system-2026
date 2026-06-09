@@ -74,7 +74,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String token = jwtService.generateToken(user.getEmail());
 
         response.sendRedirect(
-                "http://localhost:5173?token=" + token
+                "http://130.162.56.186:5173?token=" + token
         );
     }
 }
