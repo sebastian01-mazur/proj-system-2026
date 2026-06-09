@@ -1,0 +1,55 @@
+@host = localhost
+
+### Rejestracja użytkownika
+POST http://{{host}}:8001/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jan Kowalski",
+  "email": "jan.kowsssssalski@test.pl",
+  "password": "Password123"
+}
+
+### Logowanie użytkownika
+POST http://{{host}}:8001/api/auth/login
+Content-Type: application/json
+
+{
+  "email":"jan.kowalski@test.pl",
+  "password":"Password123"
+}
+
+### Test endpointu zabezpieczonego bez tokena
+GET http://{{host}}:8001/test/secure
+
+### Test endpointu zabezpieczonego z tokenem
+GET http://{{host}}:8001/test/secure
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW4ua293c3Nzc3NhbHNraUB0ZXN0LnBsIiwiaWF0IjoxNzgxMDA3NTEyLCJleHAiOjE3ODEwOTM5MTJ9.A9Z4zjQV9_Ukyu31kM1xi34kccLZOnfbQVyRBFjzkzY
+
+### Słabe hasło
+POST http://{{host}}:8001/api/auth/register
+Content-Type: application/json
+
+{
+  "name":"Jan",
+  "email":"abc@test.pl",
+  "password":"abc"
+}
+
+### Niepoprawne logowanie
+POST http://{{host}}:8001/api/auth/login
+Content-Type: application/json
+
+{
+  "email":"jan@test.pl",
+  "password":"zlehaslo"
+}
+
+### WYLOGOWANIE
+POST {{host}}/api/auth/logout
+
+### FACEBOOK OAuth
+{{host}}:8001/oauth2/authorization/facebook
+
+### GOOGLE OAuth
+{{host}}:8001/oauth2/authorization/google
