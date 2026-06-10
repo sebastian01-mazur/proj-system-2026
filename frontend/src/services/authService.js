@@ -1,41 +1,99 @@
+import { API_BASE_URL, DEFAULT_USER_ID } from "./apiConfig";
+
+const AUTH_API_URL = `${API_BASE_URL}/auth`;
 const MOCK_USER = {
-    id: "66666666-6666-6666-6666-666666666666",
+    id: DEFAULT_USER_ID,
     name: "Jan Kowalski",
     email: "jan@test.pl",
 };
+
+function saveAuthData(data, fallbackEmail = "") {
+    const token =
+        data?.token ||
+        data?.accessToken ||
+        data?.jwt ||
+        data?.bearerToken ||
+        data?.data?.token;
+
+    if (!token) {
+        throw new Error("Brak tokena w odpowiedzi API.");
+    }
+
+    const apiUser = data?.user || data?.userDto || data?.data?.user || null;
+
+    const user = {
+        id: apiUser?.id || data?.id || DEFAULT_USER_ID,
+        name: apiUser?.name || data?.name || fallbackEmail || "Użytkownik",
+        email: apiUser?.email || data?.email || fallbackEmail,
+    };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(user));
+
+    return { token, user };
+}
 
 export async function login(email, password) {
     if (!email || !password) {
         throw new Error("Podaj email i hasło.");
     }
 
-    const fakeToken = "mock-jwt-token";
+    const response = await fetch(`${AUTH_API_URL}/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+    });
 
-    localStorage.setItem("token", fakeToken);
-    localStorage.setItem("user", JSON.stringify(MOCK_USER));
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(errorText || "Dane logowania są niepoprawne.");
+    }
 
-    return {
-        token: fakeToken,
-        user: MOCK_USER,
-    };
+    const data = await response.json();
+    return saveAuthData(data, email);
 }
 
 export async function register(userData) {
-    const fakeToken = "mock-jwt-token";
+    const response = await fetch(`${AUTH_API_URL}/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify({
+            name: userData.name,
+            email: userData.email,
+            password: userData.password,
+        }),
+    });
 
-    const user = {
-        id: "66666666-6666-6666-6666-666666666666",
-        name: `${userData.name} ${userData.surname}`,
-        email: userData.email,
-    };
+    if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(errorText || "Nie udało się utworzyć konta.");
+    }
 
-    localStorage.setItem("token", fakeToken);
-    localStorage.setItem("user", JSON.stringify(user));
+    const data = await response.json();
+    return saveAuthData(data, userData.email);
+}
 
-    return {
-        token: fakeToken,
-        user,
-    };
+export function saveOAuthTokenFromUrl() {
+    const token = new URLSearchParams(window.location.search).get("token");
+
+    if (!token) {
+        return false;
+    }
+
+    localStorage.setItem("token", token);
+
+    if (!localStorage.getItem("user")) {
+        localStorage.setItem("user", JSON.stringify(MOCK_USER));
+    }
+
+    window.history.replaceState({}, document.title, "/home");
+    return true;
 }
 
 export function logout() {
