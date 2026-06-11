@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/authService";
+import { API_BASE_URL } from "../services/apiConfig";
 import facebookIcon from "../assets/fb.png";
 import googleIcon from "../assets/google.png";
 import logoIcon from "../assets/logo.png";
@@ -9,9 +10,9 @@ export default function Register() {
     const navigate = useNavigate();
 
     const [fullName, setFullName] = useState("Jan Kowalski");
-    const [email, setEmail] = useState("jan.kowalski@o2.pl");
-    const [password, setPassword] = useState("Test1234");
-    const [confirmPassword, setConfirmPassword] = useState("Test1234");
+    const [email, setEmail] = useState("jan.kowsssssalski@test.pl");
+    const [password, setPassword] = useState("Password123");
+    const [confirmPassword, setConfirmPassword] = useState("Password123");
 
     const [acceptAll, setAcceptAll] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(true);
@@ -63,14 +64,18 @@ export default function Register() {
         const [name = "", ...surnameParts] = fullName.trim().split(" ");
         const surname = surnameParts.join(" ");
 
-        await register({
-            name,
-            surname,
-            email,
-            password,
-        });
+        try {
+            await register({
+                name: fullName.trim(),
+                surname,
+                email,
+                password,
+            });
 
-        navigate("/home");
+            navigate("/home");
+        } catch (err) {
+            setError(err.message || "Nie udało się utworzyć konta.");
+        }
     }
 
     return (
@@ -87,7 +92,7 @@ export default function Register() {
                     type="button"
                     className="oauth-btn"
                     onClick={() => {
-                        window.location.href = "http://localhost:8080/oauth2/authorization/google";
+                        window.location.href = `${API_BASE_URL.replace("/api", "")}/oauth2/authorization/google`;
                     }}
                 >
                     <img src={googleIcon} alt="Google" className="oauth-google" />
@@ -97,7 +102,7 @@ export default function Register() {
                     type="button"
                     className="oauth-btn"
                     onClick={() => {
-                        window.location.href = "http://localhost:8080/oauth2/authorization/facebook";
+                        window.location.href = `${API_BASE_URL.replace("/api", "")}/oauth2/authorization/facebook`;
                     }}
                 >
                     <img src={facebookIcon} alt="Facebook" className="oauth-fb" />
@@ -109,6 +114,7 @@ export default function Register() {
                 <form onSubmit={handleSubmit} className="auth-form">
                     <label>Imię i nazwisko</label>
                     <input
+                        value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
                         placeholder="Piotr Kowalski"
                         required
@@ -117,6 +123,7 @@ export default function Register() {
                     <label>Email</label>
                     <input
                         type="email"
+                        value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="kowalski@gmail.com"
                         required
@@ -125,6 +132,7 @@ export default function Register() {
                     <label>Hasło</label>
                     <input
                         type="password"
+                        value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="twoje haslo"
                         required
@@ -133,6 +141,7 @@ export default function Register() {
                     <label>Powtórz hasło</label>
                     <input
                         type="password"
+                        value={confirmPassword}
                         onChange={(event) => setConfirmPassword(event.target.value)}
                         placeholder="Powtórz haslo"
                         required

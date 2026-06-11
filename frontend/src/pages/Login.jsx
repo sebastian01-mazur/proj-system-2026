@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
+import { API_BASE_URL } from "../services/apiConfig";
 import facebookIcon from "../assets/fb.png";
 import googleIcon from "../assets/google.png";
 import logoIcon from "../assets/logo.png";
@@ -8,8 +9,8 @@ import logoIcon from "../assets/logo.png";
 export default function Login() {
     const navigate = useNavigate();
 
-    const [email, setEmail] = useState("jan.kowalski@o2.pl");
-    const [password, setPassword] = useState("Test1234");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
 
     async function handleSubmit(event) {
@@ -20,7 +21,7 @@ export default function Login() {
             await login(email, password);
             navigate("/home");
         } catch (err) {
-            setError("Dane logowania sa niepoprawne.");
+            setError(err.message || "Dane logowania są niepoprawne.");
         }
     }
 
@@ -32,7 +33,7 @@ export default function Login() {
 
                 {error && (
                     <div className="auth-error">
-                        Brak połączenia z serwerem. Spróbuj skorzystać z aplikacji później.
+                        {error}
                     </div>
                 )}
 
@@ -42,7 +43,7 @@ export default function Login() {
                     type="button"
                     className="oauth-btn"
                     onClick={() => {
-                        window.location.href = "http://130.162.56.186:8001/oauth2/authorization/google";
+                        window.location.href = `${API_BASE_URL.replace("/api", "")}/oauth2/authorization/google`;
                     }}
                 >
                     <img src={googleIcon} alt="Google" className="oauth-google" />
@@ -52,7 +53,7 @@ export default function Login() {
                     type="button"
                     className="oauth-btn"
                     onClick={() => {
-                        window.location.href = "http://130.162.56.186:8001/oauth2/authorization/facebook";
+                        window.location.href = `${API_BASE_URL.replace("/api", "")}/oauth2/authorization/facebook`;
                     }}
                 >
                     <img src={facebookIcon} alt="Facebook" className="oauth-fb" />
@@ -65,6 +66,7 @@ export default function Login() {
                     <label>E-mail</label>
                     <input
                         type="email"
+                        value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="kowalski@gmail.com"
                         required
@@ -73,6 +75,7 @@ export default function Login() {
                     <label>Hasło</label>
                     <input
                         type="password"
+                        value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder="twoje haslo"
                         required

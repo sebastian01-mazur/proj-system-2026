@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
+import { useEffect } from "react";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./pages/Register";
@@ -13,17 +14,12 @@ import TripDetails from "./pages/TripDetails.jsx"
 import Expenses from "./pages/Expenses.jsx"
 import Reports from "./pages/Reports.jsx"
 import Profile from "./pages/Profile.jsx"
-function HomeMock() {
-    return <h1 style={{ padding: 40 }}>Home (tymczasowy)</h1>;
-}
+import { saveOAuthTokenFromUrl } from "./services/authService";
 
 export default function App() {
-    const token = new URLSearchParams(window.location.search).get("token");
-
-    if (token) {
-        localStorage.setItem("token", token);
-        window.history.replaceState({}, document.title, "/");
-    }
+    useEffect(() => {
+        saveOAuthTokenFromUrl();
+    }, []);
     return (
         <BrowserRouter>
             <Routes>
@@ -41,14 +37,7 @@ export default function App() {
                 <Route path="/trip/:id/expenses" element={<Expenses />} />
                 <Route path="/trip/:id/reports" element={<Reports />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route
-                    path="/home"
-                    element={
-                        <ProtectedRoute>
-                            <HomeMock />
-                        </ProtectedRoute>
-                    }
-                />
+
             </Routes>
         </BrowserRouter>
     );
