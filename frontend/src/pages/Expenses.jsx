@@ -6,13 +6,17 @@ import PageTitle from "../components/ui/PageTitle";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
+import { getTripById } from "../services/tripApiService";
+import { getCurrentUser } from "../services/authService";
 import {
-  getTripById,
-  getTripExpenses,
   addExpense,
-  updateExpense,
   deleteExpense,
-} from "../services/tripService";
+  getParticipantId,
+  getParticipantName,
+  getTripExpenses,
+  isValidUuid,
+  updateExpense,
+} from "../services/expenseApiService";
 
 const DEFAULT_CATEGORIES = [
   "Transport",
@@ -25,12 +29,23 @@ const DEFAULT_CATEGORIES = [
 
 const CURRENCIES = ["PLN", "EUR", "USD", "GBP", "CHF"];
 
+function withTimeout(promise, message, timeout = 12000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(message)), timeout)
+    ),
+  ]);
+}
+
 export default function Expenses() {
   const { id } = useParams();
 
   const [trip, setTrip] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState(DEFAULT_CATEGORIES[0]);
@@ -47,28 +62,75 @@ export default function Expenses() {
 
   useEffect(() => {
     async function loadData() {
-      const tripData = await getTripById(id);
-      const expensesData = await getTripExpenses(id);
+      try {
+        setLoading(true);
+        setError("");
 
-      setTrip(tripData);
-      setExpenses(expensesData);
+        const tripData = await withTimeout(
+          getTripById(id),
+          "API nie odpowiedziało przy pobieraniu podróży. Sprawdź endpoint /trips/{id}."
+        );
 
-      const participants = tripData?.participants || [];
-      setPaidBy(participants[0] || "");
-      setCurrency(tripData?.currency || "PLN");
-      setSplitRows(createEqualSplitRows(participants));
+        const expensesData = await withTimeout(
+          getTripExpenses(id, tripData),
+          "API nie odpowiedziało przy pobieraniu wydatków. Sprawdź endpoint /expenses/trip/{tripId}."
+        );
+
+        const participants = tripData?.participants || [];
+        const validParticipants = getValidParticipants(participants);
+
+        setTrip(tripData);
+        setExpenses(expensesData);
+        setPaidBy(validParticipants[0]?.userId || "");
+        setCurrency(tripData?.currency || tripData?.baseCurrency || "PLN");
+        setSplitRows(createEqualSplitRows(participants));
+      } catch (error) {
+        console.error("Błąd ładowania wydatków:", error);
+        setError(error.message || "Nie udało się pobrać wydatków.");
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadData();
   }, [id]);
 
+function getValidParticipants(participants) {
+  const currentUser = getCurrentUser();
+
+  const validParticipants = (participants || [])
+    .map((participant) => ({
+      userId: getParticipantId(participant),
+      userName: getParticipantName(participant),
+    }))
+    .filter((participant) => isValidUuid(participant.userId));
+
+  if (
+    currentUser?.id &&
+    isValidUuid(currentUser.id) &&
+    !validParticipants.some(
+      (participant) => String(participant.userId) === String(currentUser.id)
+    )
+  ) {
+    validParticipants.push({
+      userId: currentUser.id,
+      userName: currentUser.name || currentUser.email || "Ty",
+    });
+  }
+
+  return validParticipants;
+}
+
   function createEqualSplitRows(participants) {
-    if (!participants || participants.length === 0) {
+    const validParticipants = getValidParticipants(participants);
+
+    if (validParticipants.length === 0) {
       return [];
     }
 
-    const rows = participants.map((participant) => ({
-      userName: participant,
+    const rows = validParticipants.map((participant) => ({
+      userId: participant.userId,
+      userName: participant.userName,
       included: true,
       percent: 0,
     }));
@@ -102,20 +164,32 @@ export default function Expenses() {
       }
 
       assignedPercent += basePercent;
+
       return { ...row, percent: basePercent };
     });
   }
 
+  function getParticipantNameById(userId) {
+    const participant = trip?.participants?.find(
+      (item) => String(getParticipantId(item)) === String(userId)
+    );
+
+    return getParticipantName(participant) || "Uczestnik";
+  }
+
   function resetForm() {
+    const participants = trip?.participants || [];
+    const validParticipants = getValidParticipants(participants);
+
     setEditingExpenseId(null);
     setName("");
     setCategory(categories[0] || DEFAULT_CATEGORIES[0]);
-    setPaidBy(trip?.participants?.[0] || "");
+    setPaidBy(validParticipants[0]?.userId || "");
     setAmount("");
-    setCurrency(trip?.currency || "PLN");
+    setCurrency(trip?.currency || trip?.baseCurrency || "PLN");
     setExpenseDate("");
     setDescription("");
-    setSplitRows(createEqualSplitRows(trip?.participants || []));
+    setSplitRows(createEqualSplitRows(participants));
   }
 
   function handleAddCategory() {
@@ -137,22 +211,20 @@ export default function Expenses() {
     setShowCategoryInput(false);
   }
 
-  function handleSplitToggle(userName) {
+  function handleSplitToggle(userId) {
     setSplitRows((previousRows) => {
       const updatedRows = previousRows.map((row) =>
-        row.userName === userName
-          ? { ...row, included: !row.included }
-          : row
+        row.userId === userId ? { ...row, included: !row.included } : row
       );
 
       return recalculateEqualSplit(updatedRows);
     });
   }
 
-  function handleSplitPercentChange(userName, value) {
+  function handleSplitPercentChange(userId, value) {
     setSplitRows((previousRows) =>
       previousRows.map((row) =>
-        row.userName === userName
+        row.userId === userId
           ? {
               ...row,
               included: Number(value) > 0,
@@ -163,39 +235,77 @@ export default function Expenses() {
     );
   }
 
-  function getSplitPercentSum() {
-    return splitRows.reduce(
-      (sum, row) => sum + (row.included ? Number(row.percent || 0) : 0),
-      0
-    );
-  }
+function getSplitPercentSum() {
+  return splitRows.reduce(
+    (sum, row) => sum + (row.included ? Number(row.percent || 0) : 0),
+    0
+  );
+}
 
-  function buildSplitData(convertedAmount) {
-    return splitRows
-      .filter((row) => row.included)
-      .map((row) => {
-        const percent = Number(row.percent || 0);
-        const splitAmount = Number(((convertedAmount * percent) / 100).toFixed(2));
+  function buildSplitData(totalAmount) {
+    const includedRows = splitRows.filter(
+      (row) => row.included && isValidUuid(row.userId)
+    );
+
+    let assignedAmount = 0;
+
+    return includedRows.map((row, index) => {
+      const percent = Number(row.percent || 0);
+
+      if (index === includedRows.length - 1) {
+        const lastAmount = Number(
+          (Number(totalAmount) - assignedAmount).toFixed(2)
+        );
 
         return {
+          userId: row.userId,
           userName: row.userName,
           percent,
-          amount: splitAmount,
+          amount: lastAmount,
+          shareAmount: lastAmount,
         };
-      });
+      }
+
+      const splitAmount = Number(
+        ((Number(totalAmount) * percent) / 100).toFixed(2)
+      );
+
+      assignedAmount = Number((assignedAmount + splitAmount).toFixed(2));
+
+      return {
+        userId: row.userId,
+        userName: row.userName,
+        percent,
+        amount: splitAmount,
+        shareAmount: splitAmount,
+      };
+    });
+  }
+
+  async function refreshExpenses() {
+    const refreshedExpenses = await withTimeout(
+      getTripExpenses(id, trip),
+      "API nie odpowiedziało przy odświeżaniu listy wydatków."
+    );
+
+    setExpenses(refreshedExpenses);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     const splitPercentSum = Number(getSplitPercentSum().toFixed(2));
+    const originalAmount = Number(amount);
+    const validIncludedRows = splitRows.filter(
+      (row) => row.included && isValidUuid(row.userId)
+    );
 
     if (!name.trim()) {
       alert("Wpisz nazwę wydatku.");
       return;
     }
 
-    if (!amount || Number(amount) <= 0) {
+    if (!amount || originalAmount <= 0) {
       alert("Wpisz poprawną kwotę.");
       return;
     }
@@ -205,13 +315,13 @@ export default function Expenses() {
       return;
     }
 
-    if (!paidBy) {
-      alert("Wybierz uczestnika płacącego.");
+    if (!paidBy || !isValidUuid(paidBy)) {
+      alert("Wybierz poprawnego uczestnika płacącego.");
       return;
     }
 
-    if (splitRows.filter((row) => row.included).length === 0) {
-      alert("Wybierz uczestników do podziału kosztów.");
+    if (validIncludedRows.length === 0) {
+      alert("Wybierz poprawnych uczestników do podziału kosztów.");
       return;
     }
 
@@ -220,67 +330,67 @@ export default function Expenses() {
       return;
     }
 
-    const originalAmount = Number(amount);
-    const baseCurrency = trip.currency || "PLN";
-
-    // Mock pod przyszłe API NBP: na razie kurs = 1.
-    const exchangeRate = currency === baseCurrency ? 1 : 1;
-    const convertedAmount = Number((originalAmount * exchangeRate).toFixed(2));
+    const baseCurrency = trip.currency || trip.baseCurrency || "PLN";
 
     const expenseData = {
-      tripId: Number(id),
+      tripId: id,
       name,
       category,
+      payerId: paidBy,
       paidBy,
       originalAmount,
+      amount: originalAmount,
       originalCurrency: currency,
-      convertedAmount,
+      currency,
       baseCurrency,
       expenseDate,
       description,
-      exchangeRate,
-      split: buildSplitData(convertedAmount),
-      createdAt: new Date().toISOString().slice(0, 10),
+      split: buildSplitData(originalAmount),
     };
 
-    if (editingExpenseId) {
-      const updatedExpense = await updateExpense(editingExpenseId, expenseData);
+    try {
+      if (editingExpenseId) {
+        await withTimeout(
+          updateExpense(editingExpenseId, expenseData, trip),
+          "API nie odpowiedziało przy edycji wydatku."
+        );
+      } else {
+        await withTimeout(
+          addExpense(id, expenseData, trip),
+          "API nie odpowiedziało przy dodawaniu wydatku."
+        );
+      }
 
-      setExpenses((previousExpenses) =>
-        previousExpenses.map((expense) =>
-          Number(expense.id) === Number(editingExpenseId)
-            ? updatedExpense
-            : expense
-        )
-      );
-    } else {
-      const newExpense = await addExpense(id, expenseData);
-      setExpenses((previousExpenses) => [...previousExpenses, newExpense]);
+      await refreshExpenses();
+      resetForm();
+    } catch (error) {
+      console.error("Błąd zapisu wydatku:", error);
+      alert(`Nie udało się zapisać wydatku: ${error.message}`);
     }
-
-    resetForm();
   }
 
   function handleEdit(expense) {
     setEditingExpenseId(expense.id);
-    setName(expense.name || "");
+    setName(expense.name || expense.description || "");
     setCategory(expense.category || categories[0]);
-    setPaidBy(expense.paidBy || trip.participants?.[0] || "");
-    setAmount(expense.originalAmount || "");
-    setCurrency(expense.originalCurrency || trip.currency || "PLN");
+    setPaidBy(expense.payerId || expense.paidById || "");
+    setAmount(expense.originalAmount || expense.amount || "");
+    setCurrency(expense.originalCurrency || expense.currency || trip.currency || "PLN");
     setExpenseDate(expense.expenseDate || "");
     setDescription(expense.description || "");
 
     const participants = trip.participants || [];
+    const validParticipants = getValidParticipants(participants);
 
     setSplitRows(
-      participants.map((participant) => {
+      validParticipants.map((participant) => {
         const splitItem = expense.split?.find(
-          (item) => item.userName === participant
+          (item) => String(item.userId) === String(participant.userId)
         );
 
         return {
-          userName: participant,
+          userId: participant.userId,
+          userName: participant.userName,
           included: Boolean(splitItem),
           percent: splitItem?.percent || 0,
         };
@@ -289,20 +399,34 @@ export default function Expenses() {
   }
 
   async function handleDelete(expenseId) {
-    await deleteExpense(expenseId);
+    const confirmed = window.confirm("Na pewno usunąć ten wydatek?");
 
-    setExpenses((previousExpenses) =>
-      previousExpenses.filter(
-        (expense) => Number(expense.id) !== Number(expenseId)
-      )
-    );
+    if (!confirmed) {
+      return;
+    }
 
-    if (Number(editingExpenseId) === Number(expenseId)) {
-      resetForm();
+    try {
+      await withTimeout(
+        deleteExpense(expenseId),
+        "API nie odpowiedziało przy usuwaniu wydatku."
+      );
+
+      setExpenses((previousExpenses) =>
+        previousExpenses.filter(
+          (expense) => String(expense.id) !== String(expenseId)
+        )
+      );
+
+      if (String(editingExpenseId) === String(expenseId)) {
+        resetForm();
+      }
+    } catch (error) {
+      console.error("Błąd usuwania wydatku:", error);
+      alert(`Nie udało się usunąć wydatku: ${error.message}`);
     }
   }
 
-  if (!trip) {
+  if (loading) {
     return (
       <Layout>
         <main className="content">
@@ -312,8 +436,49 @@ export default function Expenses() {
     );
   }
 
+  if (error) {
+    return (
+      <Layout>
+        <main className="content">
+          <Link to={`/trip/${id}`} className="back-btn">
+            ← Wróć
+          </Link>
+
+          <Card>
+            <h3>Nie udało się pobrać wydatków</h3>
+            <p>{error}</p>
+            <p>
+              To znaczy, że frontend działa, ale request do API wydatków albo
+              podróży nie wrócił poprawnie.
+            </p>
+          </Card>
+        </main>
+      </Layout>
+    );
+  }
+
+  if (!trip) {
+    return (
+      <Layout>
+        <main className="content">
+          <Link to="/home" className="back-btn">
+            ← Wróć
+          </Link>
+
+          <Card>
+            <h3>Nie znaleziono podróży</h3>
+            <p>Nie udało się pobrać danych tej podróży.</p>
+          </Card>
+        </main>
+      </Layout>
+    );
+  }
+
+  const validParticipants = getValidParticipants(trip.participants || []);
+
   const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + Number(expense.convertedAmount || 0),
+    (sum, expense) =>
+      sum + Number(expense.convertedAmount || expense.amount || 0),
     0
   );
 
@@ -389,14 +554,14 @@ export default function Expenses() {
                 value={paidBy}
                 onChange={(event) => setPaidBy(event.target.value)}
               >
-                {trip.participants?.map((participant) => (
-                  <option key={participant} value={participant}>
-                    {participant}
+                {validParticipants.map((participant) => (
+                  <option key={participant.userId} value={participant.userId}>
+                    {participant.userName}
                   </option>
                 ))}
               </select>
 
-              <label>Kwota w walucie podróży</label>
+              <label>Kwota wydatku</label>
               <input
                 type="number"
                 min="0"
@@ -439,12 +604,12 @@ export default function Expenses() {
 
                 <div className="split-list">
                   {splitRows.map((row) => (
-                    <div className="split-row" key={row.userName}>
+                    <div className="split-row" key={row.userId}>
                       <label className="split-check">
                         <input
                           type="checkbox"
                           checked={row.included}
-                          onChange={() => handleSplitToggle(row.userName)}
+                          onChange={() => handleSplitToggle(row.userId)}
                         />
 
                         <span>{row.userName}</span>
@@ -460,7 +625,7 @@ export default function Expenses() {
                           disabled={!row.included}
                           onChange={(event) =>
                             handleSplitPercentChange(
-                              row.userName,
+                              row.userId,
                               event.target.value
                             )
                           }
@@ -505,7 +670,8 @@ export default function Expenses() {
             <div className="expenses-total">
               <span>Łącznie:</span>
               <strong>
-                {totalExpenses.toFixed(2)} {trip.currency || "PLN"}
+                {totalExpenses.toFixed(2)}{" "}
+                {trip.currency || trip.baseCurrency || "PLN"}
               </strong>
             </div>
 
@@ -522,33 +688,47 @@ export default function Expenses() {
                         {expense.category} • {expense.expenseDate}
                       </span>
 
-                      <span>Zapłacił/a: {expense.paidBy}</span>
+                      <span>
+                        Zapłacił/a:{" "}
+                        {expense.paidBy ||
+                          getParticipantNameById(expense.payerId)}
+                      </span>
 
                       <span>
-                        Podział: {" "}
-                        {expense.split
-                          ?.map((item) => `${item.userName} ${item.percent}%`)
-                          .join(", ")}
+                        Podział:{" "}
+                        {expense.split?.length > 0
+                          ? expense.split
+                              .map(
+                                (item) => `${item.userName} ${item.percent}%`
+                              )
+                              .join(", ")
+                          : "Brak danych"}
                       </span>
                     </div>
 
                     <div className="expense-item-side">
                       <strong>
-                        {Number(expense.originalAmount || 0).toFixed(2)} {" "}
-                        {expense.originalCurrency}
+                        {Number(expense.originalAmount || 0).toFixed(2)}{" "}
+                        {expense.originalCurrency || expense.currency}
                       </strong>
 
                       <span>
-                        ≈ {Number(expense.convertedAmount || 0).toFixed(2)} {" "}
-                        {expense.baseCurrency}
+                        ≈ {Number(expense.convertedAmount || 0).toFixed(2)}{" "}
+                        {expense.baseCurrency || trip.currency || "PLN"}
                       </span>
 
                       <div className="expense-actions">
-                        <button type="button" onClick={() => handleEdit(expense)}>
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(expense)}
+                        >
                           Edytuj
                         </button>
 
-                        <button type="button" onClick={() => handleDelete(expense.id)}>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(expense.id)}
+                        >
                           Usuń
                         </button>
                       </div>

@@ -5,23 +5,63 @@ import Layout from "../components/Layout";
 import PageTitle from "../components/ui/PageTitle";
 import Card from "../components/ui/Card";
 
-import { getTripById, getTripExpenses } from "../services/tripService";
+import { getTripById } from "../services/tripApiService";
+import {
+  getParticipantId,
+  getParticipantName,
+  getTripExpenses,
+} from "../services/expenseApiService";
+import {
+  getExpenseReport,
+  getParticipantReport,
+  getReportSettlements,
+} from "../services/reportApiService";
 
 export default function Reports() {
   const { id } = useParams();
 
   const [trip, setTrip] = useState(null);
   const [expenses, setExpenses] = useState([]);
+  const [expenseReport, setExpenseReport] = useState(null);
+  const [participantReport, setParticipantReport] = useState([]);
+  const [apiSettlements, setApiSettlements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadReportData() {
-      const tripData = await getTripById(id);
-      const expensesData = await getTripExpenses(id);
+      try {
+        const tripData = await getTripById(id);
+        const expensesData = await getTripExpenses(id, tripData);
 
-      setTrip(tripData);
-      setExpenses(expensesData);
-      setLoading(false);
+        setTrip(tripData);
+        setExpenses(expensesData);
+
+        try {
+          const reportData = await getExpenseReport(id);
+          setExpenseReport(reportData);
+        } catch (error) {
+          console.warn("Nie udało się pobrać raportu wydatków z API:", error);
+        }
+
+        try {
+          const participantData = await getParticipantReport(id);
+          setParticipantReport(participantData);
+        } catch (error) {
+          console.warn("Nie udało się pobrać raportu uczestników z API:", error);
+        }
+
+        try {
+          const settlementsData = await getReportSettlements(id);
+          setApiSettlements(settlementsData);
+        } catch (error) {
+          console.warn("Nie udało się pobrać rozliczeń z API:", error);
+        }
+      } catch (error) {
+        console.error(error);
+        alert(`Nie udało się pobrać raportów: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadReportData();
@@ -32,7 +72,7 @@ export default function Reports() {
   }
 
   function getExpenseName(expense) {
-    return expense.name || expense.title || expense.category || "Wydatek";
+    return expense.name || expense.description || expense.category || "Wydatek";
   }
 
   function getExpenseOriginalAmount(expense) {
@@ -48,19 +88,30 @@ export default function Reports() {
   }
 
   function getExpenseBaseCurrency(expense) {
-    return expense.baseCurrency || trip?.currency || "PLN";
+    return expense.baseCurrency || trip?.currency || trip?.baseCurrency || "PLN";
   }
 
   function getExpenseDate(expense) {
     return expense.expenseDate || expense.date || "";
   }
 
-  function calculateParticipantStats() {
+  function getParticipantNameById(userId) {
+    const participant = trip?.participants?.find(
+      (item) => String(getParticipantId(item)) === String(userId)
+    );
+
+    return getParticipantName(participant) || userId || "Uczestnik";
+  }
+
+  function calculateParticipantStatsFromExpenses() {
     const participants = trip?.participants || [];
 
     const stats = participants.reduce((result, participant) => {
-      result[participant] = {
-        name: participant,
+      const userId = getParticipantId(participant);
+
+      result[userId] = {
+        id: userId,
+        name: getParticipantName(participant),
         paid: 0,
         assigned: 0,
         balance: 0,
@@ -70,35 +121,37 @@ export default function Reports() {
     }, {});
 
     expenses.forEach((expense) => {
-      const paidBy = expense.paidBy;
+      const payerId = expense.payerId || expense.paidById;
       const convertedAmount = getExpenseConvertedAmount(expense);
 
-      if (!stats[paidBy]) {
-        stats[paidBy] = {
-          name: paidBy,
+      if (!stats[payerId]) {
+        stats[payerId] = {
+          id: payerId,
+          name: getParticipantNameById(payerId),
           paid: 0,
           assigned: 0,
           balance: 0,
         };
       }
 
-      stats[paidBy].paid += convertedAmount;
+      stats[payerId].paid += convertedAmount;
 
       if (expense.split?.length > 0) {
         expense.split.forEach((splitItem) => {
-          const userName = splitItem.userName;
-          const assignedAmount = Number(splitItem.amount || 0);
+          const userId = splitItem.userId;
+          const assignedAmount = Number(splitItem.amount || splitItem.shareAmount || 0);
 
-          if (!stats[userName]) {
-            stats[userName] = {
-              name: userName,
+          if (!stats[userId]) {
+            stats[userId] = {
+              id: userId,
+              name: getParticipantNameById(userId),
               paid: 0,
               assigned: 0,
               balance: 0,
             };
           }
 
-          stats[userName].assigned += assignedAmount;
+          stats[userId].assigned += assignedAmount;
         });
       }
     });
@@ -107,6 +160,27 @@ export default function Reports() {
       ...participant,
       balance: participant.paid - participant.assigned,
     }));
+  }
+
+  function getParticipantStats() {
+    if (participantReport.length > 0) {
+      return participantReport.map((participant) => {
+        const participantId = participant.participantId || participant.userId || participant.id;
+        const paid = Number(participant.amountPaid || 0);
+        const assigned = Number(participant.amountAssigned || 0);
+        const balance = Number(participant.balance || paid - assigned);
+
+        return {
+          id: participantId,
+          name: getParticipantNameById(participantId),
+          paid,
+          assigned,
+          balance,
+        };
+      });
+    }
+
+    return calculateParticipantStatsFromExpenses();
   }
 
   function calculateSettlements(participantStats) {
@@ -160,6 +234,23 @@ export default function Reports() {
     return settlements;
   }
 
+  function getSettlements(participantStats) {
+    if (apiSettlements.length > 0) {
+      return apiSettlements.map((settlement) => {
+        const fromId = settlement.debtorId || settlement.fromId || settlement.from;
+        const toId = settlement.creditorId || settlement.toId || settlement.to;
+
+        return {
+          from: getParticipantNameById(fromId),
+          to: getParticipantNameById(toId),
+          amount: Number(settlement.amount || settlement.settledAmount || 0),
+        };
+      });
+    }
+
+    return calculateSettlements(participantStats);
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -187,42 +278,54 @@ export default function Reports() {
     );
   }
 
-  const currency = trip.currency || "PLN";
-  const budget = Number(trip.budget || 0);
+  const currency = trip.currency || trip.baseCurrency || "PLN";
+  const budget = Number(expenseReport?.totalBudget ?? trip.budget ?? trip.plannedBudget ?? 0);
 
-  const totalExpenses = expenses.reduce(
-    (sum, expense) => sum + getExpenseConvertedAmount(expense),
-    0
+  const totalExpenses = Number(
+    expenseReport?.totalSpent ??
+      expenses.reduce((sum, expense) => sum + getExpenseConvertedAmount(expense), 0)
   );
 
   const remainingBudget = budget - totalExpenses;
 
   const budgetUsage =
-    budget > 0 ? Math.round((totalExpenses / budget) * 100) : 0;
+    expenseReport?.budgetUtilizationPercentage !== undefined
+      ? Math.round(Number(expenseReport.budgetUtilizationPercentage))
+      : budget > 0
+        ? Math.round((totalExpenses / budget) * 100)
+        : 0;
 
   const safeBudgetUsage = Math.min(budgetUsage, 100);
 
-  const expensesByCategory = expenses.reduce((result, expense) => {
-    const category = expense.category || "Inne";
-    const amount = getExpenseConvertedAmount(expense);
+  const expensesByCategoryFromApi = expenseReport?.spentByCategory || null;
 
-    if (!result[category]) {
-      result[category] = {
-        category,
-        amount: 0,
-        count: 0,
-      };
-    }
+  const categoryData = expensesByCategoryFromApi
+    ? Object.entries(expensesByCategoryFromApi)
+        .map(([category, amount]) => ({
+          category,
+          amount: Number(amount || 0),
+          count: expenses.filter((expense) => expense.category === category).length,
+        }))
+        .sort((a, b) => b.amount - a.amount)
+    : Object.values(
+        expenses.reduce((result, expense) => {
+          const category = expense.category || "Inne";
+          const amount = getExpenseConvertedAmount(expense);
 
-    result[category].amount += amount;
-    result[category].count += 1;
+          if (!result[category]) {
+            result[category] = {
+              category,
+              amount: 0,
+              count: 0,
+            };
+          }
 
-    return result;
-  }, {});
+          result[category].amount += amount;
+          result[category].count += 1;
 
-  const categoryData = Object.values(expensesByCategory).sort(
-    (a, b) => b.amount - a.amount
-  );
+          return result;
+        }, {})
+      ).sort((a, b) => b.amount - a.amount);
 
   const biggestCategoryAmount = Math.max(
     ...categoryData.map((item) => item.amount),
@@ -241,8 +344,8 @@ export default function Reports() {
   const averageExpense =
     expenses.length > 0 ? totalExpenses / expenses.length : 0;
 
-  const participantStats = calculateParticipantStats();
-  const settlements = calculateSettlements(participantStats);
+  const participantStats = getParticipantStats();
+  const settlements = getSettlements(participantStats);
 
   const mostExpensiveCategory = categoryData[0];
 
@@ -262,7 +365,7 @@ export default function Reports() {
           subtitle={`Podsumowanie podróży: ${trip.name}`}
         />
 
-        {expenses.length === 0 ? (
+        {expenses.length === 0 && !expenseReport ? (
           <Card>
             <h3>Brak wydatków</h3>
             <p>
@@ -379,7 +482,7 @@ export default function Reports() {
 
               <ul className="participant-balance-list">
                 {participantStats.map((participant) => (
-                  <li key={participant.name}>
+                  <li key={participant.id || participant.name}>
                     <div>
                       <strong>{participant.name}</strong>
                       <span>
