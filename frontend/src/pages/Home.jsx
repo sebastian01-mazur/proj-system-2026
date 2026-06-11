@@ -8,12 +8,12 @@ import Card from "../components/ui/Card";
 import { getCurrentUser } from "../services/authService";
 import { getDashboardData } from "../services/dashboardService";
 import { getOrganizerTrips } from "../services/tripApiService";
-import { DEFAULT_USER_ID } from "../services/apiConfig";
 
 export default function Home() {
   const [dashboardData, setDashboardData] = useState(null);
   const [organizerTrips, setOrganizerTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState("");
 
   const [weather, setWeather] = useState(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
@@ -22,7 +22,7 @@ export default function Home() {
   const [expandedTrips, setExpandedTrips] = useState(false);
 
   const user = getCurrentUser();
-  const userId = DEFAULT_USER_ID;
+  const userId = user?.id;
 
   const location = {
     city: "Warszawa",
@@ -32,19 +32,28 @@ export default function Home() {
 
   useEffect(() => {
     async function loadHomeData() {
+      if (!userId) {
+        setApiError("Brak ID użytkownika. Zaloguj się ponownie.");
+        setLoading(false);
+        return;
+      }
+
       try {
+        setApiError("");
+
         const [dashboard, trips] = await Promise.all([
           getDashboardData(userId),
           getOrganizerTrips(userId),
         ]);
 
-        console.log("Dashboardd API:", dashboard);
+        console.log("Dashboard API:", dashboard);
         console.log("Organizer trips API:", trips);
 
         setDashboardData(dashboard);
         setOrganizerTrips(Array.isArray(trips) ? trips : []);
       } catch (error) {
         console.error("Błąd pobierania danych Home API:", error);
+        setApiError(error.message || "Nie udało się pobrać danych użytkownika.");
       } finally {
         setLoading(false);
       }
@@ -230,6 +239,12 @@ export default function Home() {
               title={`Witaj, ${user?.name || "Użytkowniku"}!`}
               subtitle="Jaką planujemy dzisiaj podróż?"
           />
+
+          {apiError && (
+              <Card className="auth-error">
+                {apiError}
+              </Card>
+          )}
 
           <section className="home-top-grid">
             <a

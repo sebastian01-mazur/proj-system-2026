@@ -1,8 +1,14 @@
-import { apiRequest, DEFAULT_USER_ID } from "./apiConfig";
+import { apiRequest } from "./apiConfig";
 import { getCurrentUser } from "./authService";
 
 function getOrganizerId(explicitOrganizerId) {
-  return explicitOrganizerId || getCurrentUser()?.id || DEFAULT_USER_ID;
+  const organizerId = explicitOrganizerId || getCurrentUser()?.id;
+
+  if (!organizerId) {
+    throw new Error("Brak ID zalogowanego użytkownika. Zaloguj się ponownie.");
+  }
+
+  return organizerId;
 }
 
 function normalizeStatus(status = "PLANNED") {

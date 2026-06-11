@@ -1,33 +1,121 @@
-import { API_BASE_URL, DEFAULT_USER_ID } from "./apiConfig";
+import { API_BASE_URL } from "./apiConfig";
 
 const AUTH_API_URL = `${API_BASE_URL}/auth`;
-const MOCK_USER = {
-    id: DEFAULT_USER_ID,
-    name: "Jan Kowalski",
-    email: "jan@test.pl",
-};
 
-function saveAuthData(data, fallbackEmail = "") {
-    const token =
+function decodeJwtPayload(token) {
+    try {
+        const payload = token.split(".")[1];
+
+        if (!payload) {
+            return null;
+        }
+
+        const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const decodedPayload = atob(normalizedPayload);
+        const jsonPayload = decodeURIComponent(
+            decodedPayload
+                .split("")
+                .map((char) => `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`)
+                .join("")
+        );
+
+        return JSON.parse(jsonPayload);
+    } catch (error) {
+        console.warn("Nie udało się odczytać danych z tokena JWT:", error);
+        return null;
+    }
+}
+
+function pickToken(data) {
+    return (
         data?.token ||
         data?.accessToken ||
         data?.jwt ||
         data?.bearerToken ||
-        data?.data?.token;
+        data?.data?.token ||
+        data?.data?.accessToken ||
+        null
+    );
+}
+
+function normalizeUser(apiUser, fallbackEmail = "") {
+    const user = {
+        id:
+            apiUser?.id ||
+            apiUser?.userId ||
+            apiUser?.uuid ||
+            apiUser?.data?.id ||
+            apiUser?.data?.userId ||
+            null,
+
+        name:
+            apiUser?.name ||
+            apiUser?.fullName ||
+            apiUser?.username ||
+            apiUser?.data?.name ||
+            fallbackEmail ||
+            "Użytkownik",
+
+        email:
+            apiUser?.email ||
+            apiUser?.data?.email ||
+            fallbackEmail ||
+            "",
+    };
+
+    if (!user.id) {
+        throw new Error("API /auth/me nie zwróciło UUID użytkownika.");
+    }
+
+    return user;
+}
+
+async function readError(response, fallbackMessage) {
+    const errorText = await response.text().catch(() => "");
+
+    if (!errorText) {
+        return fallbackMessage;
+    }
+
+    try {
+        const errorJson = JSON.parse(errorText);
+        return errorJson.message || errorJson.error || errorText;
+    } catch {
+        return errorText;
+    }
+}
+
+async function getMeWithToken(token, fallbackEmail = "") {
+    const response = await fetch(`${AUTH_API_URL}/me`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const message = await readError(
+            response,
+            "Nie udało się pobrać aktualnie zalogowanego użytkownika."
+        );
+        throw new Error(message);
+    }
+
+    const data = await response.json();
+    return normalizeUser(data, fallbackEmail);
+}
+
+async function saveAuthData(data, fallbackEmail = "") {
+    const token = pickToken(data);
 
     if (!token) {
         throw new Error("Brak tokena w odpowiedzi API.");
     }
 
-    const apiUser = data?.user || data?.userDto || data?.data?.user || null;
-
-    const user = {
-        id: apiUser?.id || data?.id || DEFAULT_USER_ID,
-        name: apiUser?.name || data?.name || fallbackEmail || "Użytkownik",
-        email: apiUser?.email || data?.email || fallbackEmail,
-    };
-
     localStorage.setItem("token", token);
+
+    const user = await getMeWithToken(token, fallbackEmail);
     localStorage.setItem("user", JSON.stringify(user));
 
     return { token, user };
@@ -48,8 +136,8 @@ export async function login(email, password) {
     });
 
     if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        throw new Error(errorText || "Dane logowania są niepoprawne.");
+        const message = await readError(response, "Dane logowania są niepoprawne.");
+        throw new Error(message);
     }
 
     const data = await response.json();
@@ -65,35 +153,56 @@ export async function register(userData) {
         },
         body: JSON.stringify({
             name: userData.name,
+            surname: userData.surname,
             email: userData.email,
             password: userData.password,
         }),
     });
 
     if (!response.ok) {
-        const errorText = await response.text().catch(() => "");
-        throw new Error(errorText || "Nie udało się utworzyć konta.");
+        const message = await readError(response, "Nie udało się utworzyć konta.");
+        throw new Error(message);
     }
 
-    const data = await response.json();
-    return saveAuthData(data, userData.email);
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+        const data = await response.json();
+
+        const token = pickToken(data);
+
+        if (token) {
+            return saveAuthData(data, userData.email);
+        }
+    }
+
+    return login(userData.email, userData.password);
 }
 
-export function saveOAuthTokenFromUrl() {
+export async function saveOAuthTokenFromUrl() {
     const token = new URLSearchParams(window.location.search).get("token");
 
     if (!token) {
         return false;
     }
 
-    localStorage.setItem("token", token);
+    const tokenPayload = decodeJwtPayload(token);
+    const fallbackEmail = tokenPayload?.email || tokenPayload?.sub || "";
 
-    if (!localStorage.getItem("user")) {
-        localStorage.setItem("user", JSON.stringify(MOCK_USER));
+    try {
+        localStorage.setItem("token", token);
+
+        const user = await getMeWithToken(token, fallbackEmail);
+        localStorage.setItem("user", JSON.stringify(user));
+
+        window.history.replaceState({}, document.title, "/home");
+        return true;
+    } catch (error) {
+        console.error("Nie udało się obsłużyć tokena OAuth:", error);
+        logout();
+        window.history.replaceState({}, document.title, "/login");
+        return false;
     }
-
-    window.history.replaceState({}, document.title, "/home");
-    return true;
 }
 
 export function logout() {
@@ -107,5 +216,15 @@ export function isAuthenticated() {
 
 export function getCurrentUser() {
     const user = localStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+
+    if (!user) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(user);
+    } catch {
+        localStorage.removeItem("user");
+        return null;
+    }
 }

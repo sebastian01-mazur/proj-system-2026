@@ -9,10 +9,10 @@ import logoIcon from "../assets/logo.png";
 export default function Register() {
     const navigate = useNavigate();
 
-    const [fullName, setFullName] = useState("Jan Kowalski");
-    const [email, setEmail] = useState("jan.kowsssssalski@test.pl");
-    const [password, setPassword] = useState("Password123");
-    const [confirmPassword, setConfirmPassword] = useState("Password123");
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [acceptAll, setAcceptAll] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(true);

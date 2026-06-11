@@ -40,19 +40,24 @@ export default function NewTrip() {
             return;
         }
 
-        const newTrip = await createTrip({
-            name: tripName,
-            country,
-            city,
-            currency,
-            budget: Number(budget),
-            startDate,
-            endDate,
-            date: `${startDate} — ${endDate}`,
-        });
+        try {
+            const newTrip = await createTrip({
+                name: tripName,
+                country,
+                city,
+                currency,
+                budget: Number(budget),
+                startDate,
+                endDate,
+                date: `${startDate} — ${endDate}`,
+            });
 
-        alert(`Utworzono podróż: ${newTrip.name || newTrip.country}`);
-        navigate("/home");
+            alert(`Utworzono podróż: ${newTrip.name || newTrip.country}`);
+            navigate("/home");
+        } catch (error) {
+            console.error("Błąd tworzenia podróży:", error);
+            alert(error.message || "Nie udało się utworzyć podróży.");
+        }
     }
 
     return (
