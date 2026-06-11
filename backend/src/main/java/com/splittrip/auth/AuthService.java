@@ -82,4 +82,10 @@ public class AuthService {
             throw new WeakPasswordException();
         }
     }
+    public User getCurrentUser(String email) {
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Nie znaleziono użytkownika o adresie: " + email ));
+    }
 }
