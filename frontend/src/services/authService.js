@@ -61,6 +61,17 @@ function normalizeUser(apiUser, fallbackEmail = "") {
             apiUser?.data?.email ||
             fallbackEmail ||
             "",
+
+        avatar:
+            apiUser?.avatar ||
+            apiUser?.avatarUrl ||
+            apiUser?.photoUrl ||
+            apiUser?.profilePicture ||
+            apiUser?.data?.avatar ||
+            apiUser?.data?.avatarUrl ||
+            apiUser?.data?.photoUrl ||
+            apiUser?.data?.profilePicture ||
+            "",
     };
 
     if (!user.id) {

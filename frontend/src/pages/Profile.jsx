@@ -38,8 +38,13 @@ export default function Profile() {
 
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    setAvatar(imageUrl);
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setAvatar(reader.result || "");
+    };
+
+    reader.readAsDataURL(file);
   }
 
   function handleSubmit(event) {

@@ -7,6 +7,101 @@ import Button from "../components/ui/Button";
 
 import { getTripById, getTripExpenses } from "../services/tripApiService.js";
 
+function getParticipantName(participant) {
+    return participant?.name || participant?.fullName || participant?.email || participant || "Uczestnik";
+}
+
+function getParticipantAvatar(participant) {
+    return (
+        participant?.avatar ||
+        participant?.avatarUrl ||
+        participant?.photoUrl ||
+        participant?.profilePicture ||
+        ""
+    );
+}
+
+function getParticipantId(participant) {
+    return participant?.userId || participant?.id || participant?.email || getParticipantName(participant);
+}
+
+function getInitials(name = "") {
+    const initials = name
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("");
+
+    return initials || "👤";
+}
+
+function ParticipantAvatar({ participant }) {
+    const avatar = getParticipantAvatar(participant);
+    const name = getParticipantName(participant);
+
+    return (
+        <div className="avatar">
+            {avatar ? <img src={avatar} alt={name} /> : <span>{getInitials(name)}</span>}
+        </div>
+    );
+}
+
+function sameParticipant(firstParticipant, secondParticipant) {
+    const firstId = getParticipantId(firstParticipant);
+    const secondId = getParticipantId(secondParticipant);
+
+    if (firstId && secondId && String(firstId) === String(secondId)) {
+        return true;
+    }
+
+    return getParticipantName(firstParticipant) === getParticipantName(secondParticipant);
+}
+
+function buildParticipants(trip) {
+    const organizer = {
+        ...(trip.organizer || {}),
+        id: trip.organizer?.id || trip.organizer?.userId || trip.organizerId || "organizer",
+        userId: trip.organizer?.userId || trip.organizer?.id || trip.organizerId || "organizer",
+        name:
+            trip.organizer?.name ||
+            trip.organizerName ||
+            trip.createdByName ||
+            trip.ownerName ||
+            "Organizator",
+        role: "Organizator",
+        isOrganizer: true,
+    };
+
+    const rawParticipants = Array.isArray(trip.participants || trip.members)
+        ? trip.participants || trip.members
+        : [];
+
+    return rawParticipants.reduce(
+        (participants, participant) => {
+            const normalizedParticipant = {
+                ...participant,
+                id: getParticipantId(participant),
+                name: getParticipantName(participant),
+                avatar: getParticipantAvatar(participant),
+                role: sameParticipant(participant, organizer) ? "Organizator" : "Uczestnik",
+                isOrganizer: sameParticipant(participant, organizer),
+            };
+
+            const alreadyExists = participants.some((existingParticipant) =>
+                sameParticipant(existingParticipant, normalizedParticipant)
+            );
+
+            if (!alreadyExists) {
+                participants.push(normalizedParticipant);
+            }
+
+            return participants;
+        },
+        [organizer]
+    );
+}
+
 export default function TripDetails() {
     const { id } = useParams();
 
@@ -16,12 +111,18 @@ export default function TripDetails() {
 
     useEffect(() => {
         async function loadTripDetails() {
-            const tripData = await getTripById(id);
-            const expensesData = await getTripExpenses(id);
+            try {
+                const tripData = await getTripById(id);
+                const expensesData = await getTripExpenses(id);
 
-            setTrip(tripData);
-            setTripExpenses(expensesData);
-            setLoading(false);
+                setTrip(tripData);
+                setTripExpenses(expensesData);
+            } catch (error) {
+                console.error("Błąd pobierania szczegółów podróży:", error);
+                setTrip(null);
+            } finally {
+                setLoading(false);
+            }
         }
 
         loadTripDetails();
@@ -52,7 +153,7 @@ export default function TripDetails() {
         );
     }
 
-    const participants = trip.participants || [];
+    const participants = buildParticipants(trip);
     const budget = Number(trip.budget || trip.plannedBudget || 0);
 
     const totalExpenses = tripExpenses.reduce(
@@ -61,7 +162,7 @@ export default function TripDetails() {
     );
 
     const remainingBudget = budget - totalExpenses;
-    const budgetUsage = budget > 0 ? Math.round((totalExpenses / budget) * 100) : 0;
+    const budgetUsage = budget > 0 ? Math.min(Math.round((totalExpenses / budget) * 100), 100) : 0;
 
     const visibleParticipants = participants.slice(0, 4);
     const visibleExpenses = tripExpenses.slice(0, 3);
@@ -87,8 +188,9 @@ export default function TripDetails() {
                         </div>
 
                         <h1>{trip.name}</h1>
-                        <p>🇫🇷 {trip.country}</p>
+                        <p>🌍 {trip.city ? `${trip.city}, ${trip.country}` : trip.country}</p>
                         <p>📅 Termin: {trip.startDate} - {trip.endDate}</p>
+                        <p>👤 Organizator: {trip.organizerName || trip.organizer?.name || "Organizator"}</p>
                         <p>👥 Ilość uczestników: {participants.length}</p>
                         <p>💲 Budżet: {trip.budget} {trip.currency}</p>
                     </div>
@@ -106,21 +208,13 @@ export default function TripDetails() {
                     </div>
 
                     <div className="participants-row">
-                        {visibleParticipants.map((participant, index) => (
-                            <div className="participant-card" key={participant}>
-                                <div className="avatar">
-                                    {index === 0
-                                        ? "👨🏻‍💼"
-                                        : index === 1
-                                            ? "👨🏻"
-                                            : index === 2
-                                                ? "👩🏻"
-                                                : "👩🏼"}
-                                </div>
+                        {visibleParticipants.map((participant) => (
+                            <div className="participant-card" key={getParticipantId(participant)}>
+                                <ParticipantAvatar participant={participant} />
 
                                 <div>
-                                    <strong>{participant}</strong>
-                                    <p>{index === 0 ? "Organizator" : "Uczestnik"}</p>
+                                    <strong>{getParticipantName(participant)}</strong>
+                                    <p>{participant.role || "Uczestnik"}</p>
                                 </div>
                             </div>
                         ))}
@@ -167,7 +261,7 @@ export default function TripDetails() {
                                     {expense.amount} {expense.currency}
                                 </h2>
 
-                                <span>≈ {Number(expense.convertedAmount ?? expense.amount ?? 0)} PLN</span>
+                                <span>≈ {Number(expense.convertedAmount ?? expense.amount ?? 0)} {trip.currency}</span>
                             </div>
                         ))}
 

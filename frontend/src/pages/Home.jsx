@@ -113,19 +113,54 @@ export default function Home() {
     if (status === "COMPLETED") return "Zakończone";
     if (status === "ACTIVE") return "W trakcie";
     if (status === "FINISHED") return "Zakończone";
+    if (status === "Planowana") return "Planowane";
 
     return status || "Planowane";
   }
 
+  function getTripTitle(trip, country, city) {
+    const name = trip.name || trip.tripName || trip.title || trip.nazwa || "";
+
+    if (name && name !== country) {
+      return name;
+    }
+
+    if (city && city !== country) {
+      return city;
+    }
+
+    return name || country || "Podróż";
+  }
+
   function mapTrip(trip) {
+    const country =
+        trip.country ||
+        trip.destinationCountry ||
+        trip.kraj ||
+        "Brak kraju";
+
+    const city =
+        trip.city ||
+        trip.destinationCity ||
+        trip.miasto ||
+        "";
+
+    const participants = Array.isArray(trip.participants || trip.members)
+        ? trip.participants || trip.members
+        : [];
+
+    const participantsCount =
+        trip.participantsCount ||
+        trip.membersCount ||
+        participants.length ||
+        (trip.organizer || trip.organizerId ? 1 : 0);
+
     return {
       id: trip.id || trip.tripId || trip.idPodrozy,
-      name: trip.name || trip.tripName || trip.nazwa || "Podróż",
-      country:
-          trip.country ||
-          trip.destinationCountry ||
-          trip.kraj ||
-          "Brak kraju",
+      name: getTripTitle(trip, country, city),
+      country,
+      city,
+      locationLabel: city ? `${city}, ${country}` : country,
       status: mapTripStatus(trip.status),
       startDate: trip.startDate || trip.dateFrom || trip.dataRozpoczecia || "",
       endDate: trip.endDate || trip.dateTo || trip.dataZakonczenia || "",
@@ -139,11 +174,9 @@ export default function Home() {
           trip.baseCurrency ||
           trip.walutaBazowa ||
           "EUR",
-      participantsCount:
-          trip.participantsCount ||
-          trip.membersCount ||
-          trip.participants?.length ||
-          0,
+      participants,
+      participantsCount,
+      organizer: trip.organizer || null,
       image:
           trip.image ||
           trip.imageUrl ||
@@ -189,9 +222,34 @@ export default function Home() {
     };
   }
 
-  const dashboardTrips = dashboardData?.userTrips || [];
-  const tripsSource = organizerTrips.length > 0 ? organizerTrips : dashboardTrips;
-  const trips = tripsSource.map(mapTrip);
+  const dashboardTrips = (dashboardData?.userTrips || dashboardData?.trips || dashboardData?.organizedTrips || []).map(mapTrip);
+  const organizerMappedTrips = organizerTrips.map(mapTrip);
+
+  const trips = Array.from(
+      [...dashboardTrips, ...organizerMappedTrips]
+          .reduce((result, trip) => {
+            if (!trip.id) {
+              return result;
+            }
+
+            const existingTrip = result.get(String(trip.id)) || {};
+
+            result.set(String(trip.id), {
+              ...existingTrip,
+              ...trip,
+              participants: trip.participants?.length
+                  ? trip.participants
+                  : existingTrip.participants || [],
+              participantsCount: Math.max(
+                  Number(existingTrip.participantsCount || 0),
+                  Number(trip.participantsCount || 0)
+              ),
+            });
+
+            return result;
+          }, new Map())
+          .values()
+  );
 
   const recentExpenses = (dashboardData?.recentExpenses || []).map(mapExpense);
 
@@ -349,7 +407,7 @@ export default function Home() {
                             <div className="home-trip-row-header">
                               <div>
                                 <h4>{trip.name}</h4>
-                                <p>{trip.country}</p>
+                                <p>{trip.locationLabel}</p>
                               </div>
 
                               <span className="trip-status-pill">{trip.status}</span>

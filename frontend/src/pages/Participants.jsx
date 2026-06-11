@@ -7,6 +7,46 @@ import Card from "../components/ui/Card";
 
 import { getTripById } from "../services/tripApiService";
 
+function getParticipantName(participant) {
+  return participant?.name || participant?.fullName || participant?.email || participant || "Uczestnik";
+}
+
+function getParticipantAvatar(participant) {
+  return (
+    participant?.avatar ||
+    participant?.avatarUrl ||
+    participant?.photoUrl ||
+    participant?.profilePicture ||
+    ""
+  );
+}
+
+function getParticipantId(participant) {
+  return participant?.userId || participant?.id || participant?.email || getParticipantName(participant);
+}
+
+function getInitials(name = "") {
+  const initials = name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  return initials || "👤";
+}
+
+function ParticipantAvatar({ participant }) {
+  const avatar = getParticipantAvatar(participant);
+  const name = getParticipantName(participant);
+
+  return (
+    <div className="avatar">
+      {avatar ? <img src={avatar} alt={name} /> : <span>{getInitials(name)}</span>}
+    </div>
+  );
+}
+
 export default function Participants() {
   const { id } = useParams();
 
@@ -15,9 +55,15 @@ export default function Participants() {
 
   useEffect(() => {
     async function loadTrip() {
-      const data = await getTripById(id);
-      setTrip(data);
-      setLoading(false);
+      try {
+        const data = await getTripById(id);
+        setTrip(data);
+      } catch (error) {
+        console.error("Błąd pobierania uczestników:", error);
+        setTrip(null);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadTrip();
@@ -44,6 +90,8 @@ export default function Participants() {
     );
   }
 
+  const participants = trip.participants || trip.members || [];
+
   return (
       <Layout>
         <main className="content">
@@ -54,21 +102,13 @@ export default function Participants() {
           <PageTitle title="Uczestnicy" subtitle={`Podróż: ${trip.name}`} />
 
           <div className="participants-page-grid">
-            {trip.participants.map((participant, index) => (
-                <Card className="participant-full-card" key={participant}>
-                  <div className="avatar">
-                    {index === 0
-                        ? "👨🏻‍💼"
-                        : index === 1
-                            ? "👨🏻"
-                            : index === 2
-                                ? "👩🏻"
-                                : "👩🏼"}
-                  </div>
+            {participants.map((participant) => (
+                <Card className="participant-full-card" key={getParticipantId(participant)}>
+                  <ParticipantAvatar participant={participant} />
 
                   <div>
-                    <strong>{participant}</strong>
-                    <p>{index === 0 ? "Organizator" : "Uczestnik"}</p>
+                    <strong>{getParticipantName(participant)}</strong>
+                    <p>{participant.role || "Uczestnik"}</p>
                   </div>
                 </Card>
             ))}

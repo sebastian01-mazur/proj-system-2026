@@ -14,6 +14,7 @@ import TripDetails from "./pages/TripDetails.jsx"
 import Expenses from "./pages/Expenses.jsx"
 import Reports from "./pages/Reports.jsx"
 import Profile from "./pages/Profile.jsx"
+import Participants from "./pages/Participants.jsx"
 import { saveOAuthTokenFromUrl } from "./services/authService";
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
                 <Route path="/invitations" element={<Invitations />} />
                 <Route path="/trip/:id" element={<TripDetails />} />
                 <Route path="/trip/:id/expenses" element={<Expenses />} />
+                <Route path="/trip/:id/participants" element={<Participants />} />
                 <Route path="/trip/:id/reports" element={<Reports />} />
                 <Route path="/profile" element={<Profile />} />
 
