@@ -6,7 +6,7 @@ Content-Type: application/json
 
 {
   "name": "Jan Kowalski",
-  "email": "jan.kowsssssalski@test.pl",
+  "email": "jan.kowalski@test.pl",
   "password": "Password123"
 }
 
@@ -46,10 +46,14 @@ Content-Type: application/json
 }
 
 ### WYLOGOWANIE
-POST http://{{host}}:8001/api/auth/logout
+POST {{host}}:8001/api/auth/logout
 
 ### FACEBOOK OAuth
 http://{{host}}:8001/oauth2/authorization/facebook
 
 ### GOOGLE OAuth
-http://{{host}}:8001/oauth2/authorization/google
+{{host}}:8001/oauth2/authorization/google
+
+### Aktualnie zalogowany użytkownik
+GET {{host}}:8001/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJqYW4ua293YWxza2lAdGVzdC5wbCIsImlhdCI6MTc4MTA4OTU2NywiZXhwIjoxNzgxMTc1OTY3fQ.BwxMF_UtzkoehGWoTTa9qanrlUl16-EvtPQfaA37IMY
