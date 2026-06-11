@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import Layout from "../components/Layout";
@@ -7,7 +7,6 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 import { getCurrentUser } from "../services/authService";
-import { getFriends } from "../services/tripService";
 
 export default function Profile() {
   const currentUser = getCurrentUser();
@@ -15,23 +14,13 @@ export default function Profile() {
   const [name, setName] = useState(currentUser?.name || "Jan Kowalski");
   const [email, setEmail] = useState(currentUser?.email || "jan@test.pl");
   const [description, setDescription] = useState(
-    currentUser?.description || "Lubię podróże, dobre jedzenie i spontaniczne wyjazdy."
+    currentUser?.description ||
+      "Lubię podróże, dobre jedzenie i spontaniczne wyjazdy."
   );
   const [avatar, setAvatar] = useState(currentUser?.avatar || "");
+  const [copied, setCopied] = useState(false);
 
-  const [friends, setFriends] = useState([]);
-  const [showAllFriends, setShowAllFriends] = useState(false);
-
-  const visibleFriends = showAllFriends ? friends : friends.slice(0, 3);
-
-  useEffect(() => {
-    async function loadFriends() {
-      const data = await getFriends();
-      setFriends(data);
-    }
-
-    loadFriends();
-  }, []);
+  const inviteCode = currentUser?.id || "";
 
   function handleAvatarChange(event) {
     const file = event.target.files[0];
@@ -45,6 +34,24 @@ export default function Profile() {
     };
 
     reader.readAsDataURL(file);
+  }
+
+  async function handleCopyInviteCode() {
+    if (!inviteCode) {
+      alert("Brak kodu zaproszenia. Zaloguj się ponownie.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch {
+      alert("Nie udało się skopiować kodu. Skopiuj go ręcznie.");
+    }
   }
 
   function handleSubmit(event) {
@@ -88,44 +95,21 @@ export default function Profile() {
               <div className="profile-description">{description}</div>
             </Card>
 
-            <Card className="friends-card">
-              <h3>Moi znajomi</h3>
+            <Card className="invite-code-card">
+              <h3>Kod zaproszenia</h3>
 
-              {friends.length === 0 ? (
-                <p className="friends-empty">
-                  Nie masz jeszcze żadnych znajomych.
-                </p>
-              ) : (
-                <>
-                  <ul className={`friends-list ${showAllFriends ? "friends-list-expanded" : ""}`}>
-                    {visibleFriends.map((friend) => (
-                      <li key={friend.id} className="friend-item">
-                        <div className="friend-avatar">
-                          {friend.avatar ? (
-                            <img src={friend.avatar} alt={friend.name} />
-                          ) : (
-                            <span>👤</span>
-                          )}
-                        </div>
+              <p>
+                Podaj ten kod znajomemu, aby mógł zaprosić Cię do wspólnej
+                podróży.
+              </p>
 
-                        <strong>{friend.name}</strong>
-                      </li>
-                    ))}
-                  </ul>
+              <div className="invite-code-box">
+                <code>{inviteCode || "Brak kodu zaproszenia"}</code>
 
-                  {friends.length > 3 && (
-                    <button
-                      type="button"
-                      className="friends-expand-btn"
-                      onClick={() =>
-                        setShowAllFriends((previousValue) => !previousValue)
-                      }
-                    >
-                      {showAllFriends ? "Zwiń ↑" : "Rozwiń ↓"}
-                    </button>
-                  )}
-                </>
-              )}
+                <button type="button" onClick={handleCopyInviteCode}>
+                  {copied ? "Skopiowano" : "Kopiuj"}
+                </button>
+              </div>
             </Card>
           </div>
 
