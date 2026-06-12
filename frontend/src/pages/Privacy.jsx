@@ -27,7 +27,7 @@ export default function Privacy() {
                     <h3>4. Przechowywanie danych</h3>
                     <p>Dane mogą być przechowywane w naszej bazie danych.</p>
 
-                    <h3>5. Prawa użytkownika</h3>
+                    <h3>5. Prawa użytkownikaa</h3>
                     <p>Możliwość wglądu, edycji i usunięcia danych.</p>
                 </div>
             </main>
