@@ -384,7 +384,7 @@ export default function TripDetails() {
         await reloadTripDetails();
       } catch (error) {
         if (!cancelled) {
-          console.error("Błąd pobierania szczegółów podróży:", error);
+          console.error("Błąd pobieraniaa szczegółów podróży:", error);
           setError(error.message || "Nie udało się pobrać szczegółów podróży.");
         }
       } finally {
