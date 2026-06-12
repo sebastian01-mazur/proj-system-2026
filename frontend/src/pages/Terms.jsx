@@ -19,7 +19,7 @@ export default function Terms() {
                         wydatków oraz rozliczania kosztów pomiędzy uczestnikami.
                     </p>
 
-                    <h3>2. Konto użytkownika</h3>
+                    <h3>2. Konto użytkownikaa</h3>
                     <p>
                         Użytkownik zobowiązuje się do podania prawdziwych danych oraz
                         zabezpieczenia swojego konta.
