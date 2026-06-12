@@ -5,12 +5,9 @@ import Header from "../components/Header";
 import BottomNav from "../components/BottomNav";
 import Button from "../components/ui/Button";
 
-import { getTripById } from "../services/tripApiService.js";
-import {
-  getTripExpenses,
-  getParticipantId,
-  getParticipantName,
-} from "../services/expenseApiService.js";
+import { getTripById, removeTripMember } from "../services/tripApiService.js";
+import { getTripExpenses } from "../services/expenseApiService.js";
+import { getCurrentUser } from "../services/authService.js";
 
 function getText(value, fallback = "") {
   if (value === undefined || value === null) {
@@ -63,6 +60,108 @@ function getId(value, fallback = "") {
   return fallback;
 }
 
+function isGenericParticipantName(name) {
+  return ["uczestnik", "participant", "member"].includes(
+    String(name || "").trim().toLowerCase()
+  );
+}
+
+function isGenericOrganizerName(name) {
+  return ["organizator", "organizer", "owner", "właściciel", "wlasciciel"].includes(
+    String(name || "").trim().toLowerCase()
+  );
+}
+
+function cleanPersonName(name) {
+  if (!name || isGenericParticipantName(name) || isGenericOrganizerName(name)) {
+    return "";
+  }
+
+  return String(name).trim();
+}
+
+function getParticipantId(participant) {
+  if (!participant) {
+    return "";
+  }
+
+  if (typeof participant === "string" || typeof participant === "number") {
+    return String(participant);
+  }
+
+  return getId(
+    participant.userId ||
+      participant.id ||
+      participant.uuid ||
+      participant.accountId ||
+      participant.profileId ||
+      participant.participantId ||
+      participant.memberUserId ||
+      participant.user?.userId ||
+      participant.user?.id ||
+      participant.user?.uuid ||
+      participant.account?.userId ||
+      participant.account?.id ||
+      participant.profile?.userId ||
+      participant.profile?.id ||
+      "",
+    ""
+  );
+}
+
+function getParticipantEmail(participant) {
+  if (!participant || typeof participant !== "object") {
+    return "";
+  }
+
+  return getText(
+    participant.email ||
+      participant.user?.email ||
+      participant.account?.email ||
+      participant.profile?.email,
+    ""
+  );
+}
+
+function getVisibleParticipantName(participant) {
+  const currentUser = getCurrentUser();
+  const participantId = getParticipantId(participant);
+
+  if (currentUser?.id && participantId && String(currentUser.id) === String(participantId)) {
+    return cleanPersonName(currentUser.name) || currentUser.email || `Użytkownik ${String(participantId).slice(0, 8)}`;
+  }
+
+  if (typeof participant === "string" || typeof participant === "number") {
+    const value = String(participant);
+    return value.includes("@") ? value : `Użytkownik ${value.slice(0, 8)}`;
+  }
+
+  const name =
+    cleanPersonName(participant?.name) ||
+    cleanPersonName(participant?.fullName) ||
+    cleanPersonName(participant?.login) ||
+    cleanPersonName(participant?.userName) ||
+    cleanPersonName(participant?.username) ||
+    cleanPersonName(participant?.displayName) ||
+    cleanPersonName(participant?.user?.name) ||
+    cleanPersonName(participant?.user?.fullName) ||
+    cleanPersonName(participant?.user?.login) ||
+    cleanPersonName(participant?.user?.userName) ||
+    cleanPersonName(participant?.user?.username) ||
+    cleanPersonName(participant?.user?.displayName) ||
+    cleanPersonName(participant?.account?.name) ||
+    cleanPersonName(participant?.account?.login) ||
+    cleanPersonName(participant?.profile?.name) ||
+    cleanPersonName(participant?.profile?.login) ||
+    getParticipantEmail(participant);
+
+  return name || (participantId ? `Użytkownik ${String(participantId).slice(0, 8)}` : "");
+}
+
+function isOrganizerParticipant(participant) {
+  return participant?.isOrganizer || participant?.role === "Organizator";
+}
+
 function getCurrency(trip) {
   return getText(trip?.currency || trip?.baseCurrency, "PLN");
 }
@@ -106,15 +205,22 @@ function getTripEndDate(trip) {
 }
 
 function getOrganizerName(trip) {
-  return getText(
-    trip?.organizerName ||
-      trip?.createdByName ||
-      trip?.ownerName ||
-      trip?.organizer ||
-      trip?.owner ||
-      trip?.createdBy,
-    "Organizator"
-  );
+  const organizerId = getId(trip?.organizer?.userId || trip?.organizer?.id || trip?.organizerId, "");
+  const name =
+    cleanPersonName(trip?.organizerName) ||
+    cleanPersonName(trip?.organizerLogin) ||
+    cleanPersonName(trip?.organizerUsername) ||
+    cleanPersonName(trip?.createdByName) ||
+    cleanPersonName(trip?.createdByLogin) ||
+    cleanPersonName(trip?.createdByUsername) ||
+    cleanPersonName(trip?.ownerName) ||
+    cleanPersonName(trip?.ownerLogin) ||
+    cleanPersonName(trip?.ownerUsername) ||
+    getVisibleParticipantName(trip?.organizer) ||
+    getVisibleParticipantName(trip?.createdBy) ||
+    getVisibleParticipantName(trip?.owner);
+
+  return name || (organizerId ? `Użytkownik ${String(organizerId).slice(0, 8)}` : "Nieznany organizator");
 }
 
 function getParticipantAvatar(participant) {
@@ -147,7 +253,7 @@ function getInitials(name = "") {
 
 function ParticipantAvatar({ participant }) {
   const avatar = getParticipantAvatar(participant);
-  const name = getParticipantName(participant);
+  const name = getVisibleParticipantName(participant);
 
   return (
     <div className="avatar">
@@ -164,11 +270,25 @@ function sameParticipant(firstParticipant, secondParticipant) {
     return true;
   }
 
-  return getParticipantName(firstParticipant) === getParticipantName(secondParticipant);
+  const firstEmail = getParticipantEmail(firstParticipant);
+  const secondEmail = getParticipantEmail(secondParticipant);
+
+  return Boolean(
+    firstEmail &&
+      secondEmail &&
+      String(firstEmail).toLowerCase() === String(secondEmail).toLowerCase()
+  );
 }
 
 function buildParticipants(trip) {
+  const rawParticipants = Array.isArray(trip.participants)
+    ? trip.participants
+    : Array.isArray(trip.members)
+      ? trip.members
+      : [];
+
   const organizer = {
+    ...(trip.organizer || {}),
     id: getId(trip.organizer?.id || trip.organizer?.userId || trip.organizerId, "organizer"),
     userId: getId(trip.organizer?.userId || trip.organizer?.id || trip.organizerId, "organizer"),
     name: getOrganizerName(trip),
@@ -176,36 +296,33 @@ function buildParticipants(trip) {
     isOrganizer: true,
   };
 
-  const rawParticipants = Array.isArray(trip.participants)
-    ? trip.participants
-    : Array.isArray(trip.members)
-      ? trip.members
-      : [];
+  return [organizer, ...rawParticipants].reduce((participants, participant) => {
+    const participantId = getParticipantId(participant);
+    const normalizedParticipant = {
+      ...participant,
+      id: participantId || participant?.id || participant?.memberId || getVisibleParticipantName(participant),
+      userId: participantId || participant?.userId || participant?.id || "",
+      name: getVisibleParticipantName(participant),
+      email: getParticipantEmail(participant),
+      avatar: getParticipantAvatar(participant),
+      role: isOrganizerParticipant(participant) || sameParticipant(participant, organizer) ? "Organizator" : "Uczestnik",
+      isOrganizer: isOrganizerParticipant(participant) || sameParticipant(participant, organizer),
+    };
 
-  return rawParticipants.reduce(
-    (participants, participant) => {
-      const normalizedParticipant = {
-        ...participant,
-        id: getParticipantId(participant),
-        userId: getParticipantId(participant),
-        name: getParticipantName(participant),
-        avatar: getParticipantAvatar(participant),
-        role: sameParticipant(participant, organizer) ? "Organizator" : "Uczestnik",
-        isOrganizer: sameParticipant(participant, organizer),
-      };
-
-      const alreadyExists = participants.some((existingParticipant) =>
-        sameParticipant(existingParticipant, normalizedParticipant)
-      );
-
-      if (!alreadyExists) {
-        participants.push(normalizedParticipant);
-      }
-
+    if (!normalizedParticipant.name) {
       return participants;
-    },
-    [organizer]
-  );
+    }
+
+    const alreadyExists = participants.some((existingParticipant) =>
+      sameParticipant(existingParticipant, normalizedParticipant)
+    );
+
+    if (!alreadyExists) {
+      participants.push(normalizedParticipant);
+    }
+
+    return participants;
+  }, []);
 }
 
 function getExpenseName(expense) {
@@ -243,28 +360,119 @@ export default function TripDetails() {
   const [tripExpenses, setTripExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [removingParticipantId, setRemovingParticipantId] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+
+  async function reloadTripDetails() {
+    const tripData = await getTripById(id);
+    const expensesData = await getTripExpenses(id, tripData);
+
+    setTrip(tripData);
+    setTripExpenses(expensesData);
+  }
 
   useEffect(() => {
-    async function loadTripDetails() {
+    let cancelled = false;
+
+    async function loadTripDetails(showLoader = true) {
       try {
-        setLoading(true);
+        if (showLoader) {
+          setLoading(true);
+        }
         setError("");
 
-        const tripData = await getTripById(id);
-        const expensesData = await getTripExpenses(id, tripData);
-
-        setTrip(tripData);
-        setTripExpenses(expensesData);
+        await reloadTripDetails();
       } catch (error) {
-        console.error("Błąd pobierania szczegółów podróży:", error);
-        setError(error.message || "Nie udało się pobrać szczegółów podróży.");
+        if (!cancelled) {
+          console.error("Błąd pobierania szczegółów podróży:", error);
+          setError(error.message || "Nie udało się pobrać szczegółów podróży.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled && showLoader) {
+          setLoading(false);
+        }
       }
     }
 
     loadTripDetails();
+
+    const refreshOnFocus = () => loadTripDetails(false);
+    window.addEventListener("focus", refreshOnFocus);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", refreshOnFocus);
+    };
   }, [id]);
+
+  async function handleRemoveParticipant(participant) {
+    const participantId = getParticipantId(participant);
+    const participantName = getVisibleParticipantName(participant) || "tego uczestnika";
+
+    if (isOrganizerParticipant(participant)) {
+      setActionMessage("Nie można usunąć organizatora wycieczki.");
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    const participantsList = buildParticipants(trip);
+    const currentUserIsOrganizer = participantsList.some(
+      (item) => isOrganizerParticipant(item) && sameParticipant(item, currentUser)
+    );
+
+    const isRemovingSelf = sameParticipant(participant, currentUser);
+
+    if (!currentUserIsOrganizer && !isRemovingSelf) {
+      setActionMessage("Tylko organizator może usuwać innych uczestników.");
+      return;
+    }
+
+    const confirmMessage = isRemovingSelf
+      ? "Czy na pewno chcesz opuścić tę wycieczkę?"
+      : `Usunąć uczestnika ${participantName} z wycieczki?`;
+
+    const confirmed = window.confirm(confirmMessage);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setRemovingParticipantId(participantId);
+      setActionMessage("");
+      await removeTripMember(id, participant);
+
+      setTrip((currentTrip) => {
+        if (!currentTrip) {
+          return currentTrip;
+        }
+
+        const nextParticipants = (currentTrip.participants || currentTrip.members || []).filter(
+          (item) => String(getParticipantId(item)) !== String(participantId)
+        );
+
+        return {
+          ...currentTrip,
+          participants: nextParticipants,
+          members: nextParticipants,
+          participantsCount: nextParticipants.length,
+        };
+      });
+
+      setActionMessage(isRemovingSelf ? "Opuściłeś wycieczkę." : "Uczestnik został usunięty z wycieczki.");
+
+      try {
+        await reloadTripDetails();
+      } catch (reloadError) {
+        console.warn("Nie udało się odświeżyć szczegółów podróży po usunięciu:", reloadError);
+      }
+    } catch (error) {
+      console.error("Błąd usuwania uczestnika:", error);
+      setActionMessage(error.message || "Nie udało się usunąć uczestnika.");
+    } finally {
+      setRemovingParticipantId("");
+    }
+  }
 
   if (loading) {
     return (
@@ -313,6 +521,10 @@ export default function TripDetails() {
   }
 
   const participants = buildParticipants(trip);
+  const currentUser = getCurrentUser();
+  const currentUserIsOrganizer = participants.some(
+    (participant) => isOrganizerParticipant(participant) && sameParticipant(participant, currentUser)
+  );
   const currency = getCurrency(trip);
   const budget = getTripBudget(trip);
 
@@ -381,17 +593,38 @@ export default function TripDetails() {
             </Link>
           </div>
 
-          <div className="participants-row">
-            {visibleParticipants.map((participant) => (
-              <div className="participant-card" key={getParticipantId(participant)}>
-                <ParticipantAvatar participant={participant} />
+          {actionMessage && <p className="action-message">{actionMessage}</p>}
 
-                <div>
-                  <strong>{getParticipantName(participant)}</strong>
-                  <p>{participant.role || "Uczestnik"}</p>
+          <div className="participants-row">
+            {visibleParticipants.map((participant, index) => {
+              const participantId = getParticipantId(participant) || `${getVisibleParticipantName(participant)}-${index}`;
+              const removing = removingParticipantId === participantId;
+              const organizer = isOrganizerParticipant(participant);
+
+              return (
+                <div className="participant-card" key={participantId}>
+                  <ParticipantAvatar participant={participant} />
+
+                  <div className="participant-main-info">
+                    <strong>{getVisibleParticipantName(participant)}</strong>
+                    <p>{participant.role || "Uczestnik"}</p>
+                  </div>
+
+                  {((currentUserIsOrganizer && !organizer && !sameParticipant(participant, currentUser)) ||
+                    (!currentUserIsOrganizer && sameParticipant(participant, currentUser) && !organizer)) && (
+                    <button
+                      type="button"
+                      className="remove-participant-icon"
+                      onClick={() => handleRemoveParticipant(participant)}
+                      disabled={removing}
+                      title={sameParticipant(participant, currentUser) ? "Opuść wycieczkę" : "Usuń uczestnika"}
+                    >
+                      {removing ? "…" : "×"}
+                    </button>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {hiddenParticipantsCount > 0 && (
               <Link to={`/trip/${getId(trip.id, id)}/participants`} className="more-card more-link">

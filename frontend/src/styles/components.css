@@ -212,3 +212,46 @@
   border-radius: 50%;
   object-fit: cover;
 }
+
+.action-message {
+  margin: 10px 0 16px;
+  color: #0b376d;
+  font-weight: 600;
+}
+
+.participant-main-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.remove-participant-btn,
+.remove-participant-icon {
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.remove-participant-btn {
+  margin-left: auto;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f8d7da;
+  color: #8a1c25;
+}
+
+.remove-participant-btn:disabled,
+.remove-participant-icon:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.remove-participant-icon {
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: #f8d7da;
+  color: #8a1c25;
+  font-size: 18px;
+  line-height: 1;
+}

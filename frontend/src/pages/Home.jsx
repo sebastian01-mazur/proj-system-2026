@@ -7,7 +7,7 @@ import Card from "../components/ui/Card";
 
 import { getCurrentUser } from "../services/authService";
 import { getDashboardData } from "../services/dashboardService";
-import { getOrganizerTrips } from "../services/tripApiService";
+import { getOrganizerTrips, getTripById } from "../services/tripApiService";
 
 function getText(value, fallback = "") {
   if (value === undefined || value === null) {
@@ -66,6 +66,7 @@ function getAmount(value, fallback = 0) {
 export default function Home() {
   const [dashboardData, setDashboardData] = useState(null);
   const [organizerTrips, setOrganizerTrips] = useState([]);
+  const [freshTrips, setFreshTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState("");
 
@@ -85,6 +86,55 @@ export default function Home() {
   };
 
   useEffect(() => {
+    let cancelled = false;
+
+    function getRawDashboardTrips(dashboard) {
+      return dashboard?.userTrips || dashboard?.trips || dashboard?.organizedTrips || [];
+    }
+
+    async function hydrateTripsFromBackend(rawTrips) {
+      const uniqueTrips = Array.from(
+        rawTrips
+          .filter(Boolean)
+          .reduce((result, trip) => {
+            const tripId = getId(trip.id || trip.tripId || trip.idPodrozy, "");
+
+            if (tripId && !result.has(String(tripId))) {
+              result.set(String(tripId), trip);
+            }
+
+            return result;
+          }, new Map())
+          .values()
+      );
+
+      const hydratedTrips = await Promise.all(
+        uniqueTrips.map(async (trip) => {
+          const tripId = getId(trip.id || trip.tripId || trip.idPodrozy, "");
+
+          try {
+            const freshTrip = await getTripById(tripId, { includeCurrentUserParticipant: false });
+
+            return {
+              ...trip,
+              ...freshTrip,
+              participants: freshTrip.participants || freshTrip.members || [],
+              members: freshTrip.members || freshTrip.participants || [],
+              participantsCount:
+                freshTrip.participantsCount ??
+                freshTrip.membersCount ??
+                (freshTrip.participants || freshTrip.members || []).length,
+            };
+          } catch (error) {
+            console.warn("Nie udało się odświeżyć podróży z backendu:", error);
+            return trip;
+          }
+        })
+      );
+
+      return hydratedTrips;
+    }
+
     async function loadHomeData() {
       if (!userId) {
         setApiError("Brak ID użytkownika. Zaloguj się ponownie.");
@@ -93,6 +143,7 @@ export default function Home() {
       }
 
       try {
+        setLoading(true);
         setApiError("");
 
         const [dashboard, trips] = await Promise.all([
@@ -100,20 +151,41 @@ export default function Home() {
           getOrganizerTrips(userId),
         ]);
 
-        console.log("Dashboard API:", dashboard);
-        console.log("Organizer trips API:", trips);
+        if (cancelled) {
+          return;
+        }
+
+        const organizerTripsData = Array.isArray(trips) ? trips : [];
+        const refreshedTrips = await hydrateTripsFromBackend([
+          ...getRawDashboardTrips(dashboard),
+          ...organizerTripsData,
+        ]);
+
+        if (cancelled) {
+          return;
+        }
 
         setDashboardData(dashboard);
-        setOrganizerTrips(Array.isArray(trips) ? trips : []);
+        setOrganizerTrips(organizerTripsData);
+        setFreshTrips(refreshedTrips);
       } catch (error) {
         console.error("Błąd pobierania danych Home API:", error);
         setApiError(error.message || "Nie udało się pobrać danych użytkownika.");
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadHomeData();
+
+    window.addEventListener("focus", loadHomeData);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", loadHomeData);
+    };
   }, [userId]);
 
   useEffect(() => {
@@ -291,26 +363,30 @@ export default function Home() {
   ).map(mapTrip);
 
   const organizerMappedTrips = organizerTrips.map(mapTrip);
+  const hydratedMappedTrips = freshTrips.map(mapTrip);
+  const sourceTrips = hydratedMappedTrips.length
+    ? hydratedMappedTrips
+    : [...dashboardTrips, ...organizerMappedTrips];
 
   const trips = Array.from(
-    [...dashboardTrips, ...organizerMappedTrips]
+    sourceTrips
       .reduce((result, trip) => {
         if (!trip.id) {
           return result;
         }
 
         const existingTrip = result.get(String(trip.id)) || {};
+        const participantList = trip.participants?.length
+          ? trip.participants
+          : existingTrip.participants || [];
 
         result.set(String(trip.id), {
           ...existingTrip,
           ...trip,
-          participants: trip.participants?.length
-            ? trip.participants
-            : existingTrip.participants || [],
-          participantsCount: Math.max(
-            Number(existingTrip.participantsCount || 0),
-            Number(trip.participantsCount || 0)
-          ),
+          participants: participantList,
+          participantsCount: Number.isFinite(Number(trip.participantsCount))
+            ? Number(trip.participantsCount)
+            : participantList.length,
         });
 
         return result;

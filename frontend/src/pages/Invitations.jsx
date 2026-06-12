@@ -107,12 +107,14 @@ export default function Invitations() {
     setInvitations(invitationsData);
   }
 
-  async function handleAccept(id) {
+  async function handleAccept(invitation) {
+    const invitationId = getId(invitation?.id || invitation?.invitationId, "");
+
     try {
-      await acceptInvitation(id);
+      await acceptInvitation(invitation);
 
       setInvitations((previousInvitations) =>
-        previousInvitations.filter((invitation) => invitation.id !== id)
+        previousInvitations.filter((item) => item.id !== invitationId)
       );
     } catch (error) {
       console.error("Błąd akceptowania zaproszenia:", error);
@@ -215,7 +217,7 @@ export default function Invitations() {
               </div>
 
               <div className="invite-buttons">
-                <Button onClick={() => handleAccept(invitation.id)}>
+                <Button onClick={() => handleAccept(invitation)}>
                   Akceptuj
                 </Button>
 

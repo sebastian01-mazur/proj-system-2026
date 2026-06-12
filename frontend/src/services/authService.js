@@ -1,7 +1,6 @@
 import { API_BASE_URL } from "./apiConfig";
 
 const AUTH_API_URL = `${API_BASE_URL}/auth`;
-
 function decodeJwtPayload(token) {
     try {
         const payload = token.split(".")[1];
@@ -128,7 +127,6 @@ async function saveAuthData(data, fallbackEmail = "") {
 
     const user = await getMeWithToken(token, fallbackEmail);
     localStorage.setItem("user", JSON.stringify(user));
-
     return { token, user };
 }
 
@@ -205,8 +203,7 @@ export async function saveOAuthTokenFromUrl() {
 
         const user = await getMeWithToken(token, fallbackEmail);
         localStorage.setItem("user", JSON.stringify(user));
-
-        window.history.replaceState({}, document.title, "/home");
+            window.history.replaceState({}, document.title, "/home");
         return true;
     } catch (error) {
         console.error("Nie udało się obsłużyć tokena OAuth:", error);

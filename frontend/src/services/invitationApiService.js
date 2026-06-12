@@ -1,6 +1,12 @@
 import { apiRequest } from "./apiConfig";
 import { getCurrentUser } from "./authService";
-import { getTripById } from "./tripApiService";
+import {
+  cacheAcceptedTripMembership,
+  clearTripInvitationForUser,
+  getTripById,
+  isInvitationAlreadyExistsError,
+  reopenTripInvitationForUser,
+} from "./tripApiService";
 
 function getCurrentUserId() {
   const userId = getCurrentUser()?.id;
@@ -100,21 +106,54 @@ async function normalizeInvitation(invitation) {
 
   if (tripId) {
     try {
-      trip = await getTripById(tripId);
+      trip = await getTripById(tripId, { includeCurrentUserParticipant: false });
     } catch (error) {
       console.warn("Nie udało się pobrać danych podróży dla zaproszenia:", error);
     }
   }
 
+  const inviter = firstValue(invitation.inviter, invitation.createdBy, invitation.organizer, null);
+  const inviterName = getText(
+    invitation.inviterName ||
+      invitation.inviterEmail ||
+      invitation.createdByName ||
+      invitation.createdByEmail ||
+      inviter,
+    "Użytkownik"
+  );
+  const inviterEmail = getText(
+    invitation.inviterEmail ||
+      invitation.createdByEmail ||
+      invitation.organizerEmail ||
+      (typeof inviter === "object" ? inviter.email : ""),
+    ""
+  );
+
   return {
     ...invitation,
+    raw: invitation,
     id: getId(firstValue(invitation.id, invitation.invitationId, invitation.idZaproszenia)),
     type: "trip",
     tripId,
+    tripData: trip,
     inviteeId: getId(firstValue(invitation.inviteeId, invitation.invitee, invitation.idZapraszanego)),
     inviterId: getId(firstValue(invitation.inviterId, invitation.inviter, invitation.idZapraszajacego)),
+    organizerId: getId(firstValue(invitation.organizerId, invitation.inviterId, invitation.createdById, invitation.inviter, invitation.createdBy)),
+    organizer: firstValue(invitation.organizer, invitation.inviter, invitation.createdBy, null),
+    organizerName: inviterName,
+    organizerEmail: inviterEmail,
+    inviter,
+    inviterName,
+    inviterEmail,
+    avatar: getText(
+      invitation.avatar ||
+        invitation.inviterAvatar ||
+        invitation.createdByAvatar ||
+        (typeof inviter === "object" ? inviter.avatar || inviter.avatarUrl || inviter.photoUrl : ""),
+      ""
+    ),
     status: normalizeStatus(invitation.status),
-    user: getText(invitation.inviterName || invitation.inviter || invitation.createdBy, "Użytkownik"),
+    user: inviterName,
     trip: getText(trip?.name || trip?.tripName || invitation.tripName, "Podróż"),
     country: getText(trip?.country || invitation.country, "Brak kraju"),
     date: formatDateRange(trip),
@@ -148,26 +187,87 @@ export async function sendTripInvitation({ tripId, inviteeId }) {
     throw new Error("Brak ID zapraszanego użytkownika.");
   }
 
-  return apiRequest(`/trips/${tripId}/invitations`, {
-    method: "POST",
-    body: JSON.stringify({
-      inviterId,
-      inviteeId,
-    }),
+  const encodedTripId = encodeURIComponent(tripId);
+  const requestBody = JSON.stringify({
+    inviterId,
+    inviteeId,
   });
+
+  try {
+    return await apiRequest(`/trips/${encodedTripId}/invitations`, {
+      method: "POST",
+      body: requestBody,
+    });
+  } catch (error) {
+    if (!isInvitationAlreadyExistsError(error)) {
+      throw error;
+    }
+
+    // Backend trzyma stare zaproszenie po statusie ACCEPTED/po usunięciu uczestnika.
+    // Najpierw próbujemy je ponownie otworzyć, a jeśli backend nie ma takiego endpointu,
+    // czyścimy stare zaproszenie i tworzymy nowe.
+    try {
+      return await reopenTripInvitationForUser(tripId, inviteeId, inviterId);
+    } catch (reopenError) {
+      console.warn("Nie udało się wznowić istniejącego zaproszenia:", reopenError);
+    }
+
+    try {
+      await clearTripInvitationForUser(tripId, inviteeId, inviterId);
+
+      return await apiRequest(`/trips/${encodedTripId}/invitations`, {
+        method: "POST",
+        body: requestBody,
+      });
+    } catch (retryError) {
+      throw new Error(
+        " PENDING/CANCELLED. " +
+          `Ostatni błąd: ${retryError?.message || error.message}`
+      );
+    }
+  }
 }
 
-export async function acceptInvitation(invitationId) {
+export async function acceptInvitation(invitationOrId) {
+  const invitationId = getId(invitationOrId?.id || invitationOrId?.invitationId || invitationOrId);
+
   if (!invitationId) {
     throw new Error("Brak ID zaproszenia.");
   }
 
-  return apiRequest(`/trips/invitations/${invitationId}/resolve`, {
+  const currentUser = getCurrentUser();
+  const tripId = getId(firstValue(
+    invitationOrId?.tripId,
+    invitationOrId?.idPodrozy,
+    invitationOrId?.tripData?.id,
+    invitationOrId?.tripData?.tripId,
+    invitationOrId?.raw?.tripId,
+    invitationOrId?.raw?.idPodrozy
+  ));
+  const inviteeId = getId(firstValue(
+    invitationOrId?.inviteeId,
+    invitationOrId?.idZapraszanego,
+    invitationOrId?.raw?.inviteeId,
+    invitationOrId?.raw?.idZapraszanego,
+    currentUser?.id
+  ));
+
+  const response = await apiRequest(`/trips/invitations/${invitationId}/resolve`, {
     method: "PATCH",
     body: JSON.stringify({
       accept: true,
+      tripId,
+      userId: currentUser?.id || inviteeId,
+      inviteeId: inviteeId || currentUser?.id,
+      participantId: currentUser?.id || inviteeId,
     }),
   });
+
+  if (typeof invitationOrId === "object") {
+    await cacheAcceptedTripMembership(invitationOrId, response);
+  }
+
+  return response;
 }
 
 export async function rejectInvitation(invitationId) {
