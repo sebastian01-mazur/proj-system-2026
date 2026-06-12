@@ -22,7 +22,7 @@ export default function Privacy() {
                     </p>
 
                     <h3>3. Cel przetwarzania</h3>
-                    <p>Obsługa aplikacji i rozliczeń podróży.</p>
+                    <p>Obsługa aplikacji i rozliczeń podróżyy.</p>
 
                     <h3>4. Przechowywanie danych</h3>
                     <p>Dane mogą być przechowywane w naszej bazie danych.</p>
