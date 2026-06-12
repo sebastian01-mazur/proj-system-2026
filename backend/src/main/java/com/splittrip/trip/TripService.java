@@ -21,9 +21,10 @@ public class TripService {
     }
 
     @Transactional
-    public Trip createTrip(Trip trip) {
+    public Trip createTrip(Trip trip, UUID organizerId) {
         trip.setStatus(TripStatus.PLANNED);
         trip.setCreatedAt(LocalDate.now());
+        trip.setOrganizerId(organizerId);
         Trip savedTrip = tripRepository.save(trip);
 
         // Automatyczne przypisanie twórcy jako głównego organizatora

@@ -1,5 +1,6 @@
 package com.splittrip.trip;
 
+import com.splittrip.auth.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +18,10 @@ public class TripController {
 
     private final TripService tripService;
     private final MemberService memberService;
+    private final UserRepository userRepository; //nowe
 
-    public TripController(TripService tripService, MemberService memberService) {
+    public TripController(TripService tripService, MemberService memberService, UserRepository userRepository) {
+        this.userRepository = userRepository; //nowe
         this.tripService = tripService;
         this.memberService = memberService;
     }
@@ -30,13 +33,35 @@ public class TripController {
     public record UpdateRoleRequest(Roles role) {}
 
 
+//    @PostMapping
+//    public ResponseEntity<Trip> createTrip(@RequestBody CreateTripRequest request) {
+//        Trip newTrip = new Trip(
+//                request.organizerId(), request.country(), request.startDate(), request.endDate(),
+//                request.baseCurrency(), request.plannedBudget(), TripStatus.PLANNED, LocalDate.now()
+//        );
+//        return new ResponseEntity<>(tripService.createTrip(newTrip, currentUserId), HttpStatus.CREATED);
+//    }
+
     @PostMapping
-    public ResponseEntity<Trip> createTrip(@RequestBody CreateTripRequest request) {
+    public ResponseEntity<Trip> createTrip(@RequestBody CreateTripRequest request, java.security.Principal principal) {
+
+        var currentUser = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Nie znaleziono użytkownika"));
+
+        UUID currentUserId = UUID.fromString(currentUser.getId());
+
         Trip newTrip = new Trip(
-                request.organizerId(), request.country(), request.startDate(), request.endDate(),
-                request.baseCurrency(), request.plannedBudget(), TripStatus.PLANNED, LocalDate.now()
+                currentUserId,
+                request.country(),
+                request.startDate(),
+                request.endDate(),
+                request.baseCurrency(),
+                request.plannedBudget(),
+                TripStatus.PLANNED,
+                LocalDate.now()
         );
-        return new ResponseEntity<>(tripService.createTrip(newTrip), HttpStatus.CREATED);
+
+        return new ResponseEntity<>(tripService.createTrip(newTrip, currentUserId), HttpStatus.CREATED);
     }
 
     @GetMapping("/organizer/{organizerId}")
